@@ -9,6 +9,7 @@ Contributions to this list are welcome. Before submitting your suggestions, plea
 ## Contents
 
 - [Recommended reading](#recommended-reading)
+- [Usage examples](#usage-examples)
 - [Text](#text)
 - [Coding](#coding)
 - [Agents](#agents)
@@ -39,6 +40,51 @@ Contributions to this list are welcome. Before submitting your suggestions, plea
 - [GPT-4](https://openai.com/research/gpt-4) - Announcement of GPT-4, a large multimodal model. OpenAI blog, March 14, 2023.
 - [DALL·E 3](https://openai.com/index/dall-e-3/) - Announcement of DALL·E 3 image generator. OpenAI blog, September 20, 2023.
 - [Sora](https://openai.com/research/video-generation-models-as-world-simulators) - Presentation of Sora, a large video generation model. OpenAI, February 15, 2024.
+
+## Usage examples
+
+Here are practical examples of what you can accomplish with the generative AI tools listed in this repository.
+
+### Writing and content creation
+
+- **Draft a blog post** - Use [ChatGPT](https://chatgpt.com/), [Claude](https://claude.ai/), or [Gemini](https://gemini.google.com/) to generate an outline and first draft, then refine with a writing assistant like [Jasper](https://www.jasper.ai/) or [Wordtune](https://www.wordtune.com/).
+- **Summarize a research paper** - Upload a PDF to [ChatPDF](https://www.chatpdf.com/) or [SciSpace](https://typeset.io/) and ask questions about its findings in plain language.
+- **Write and send polished emails** - Use [Lavender](https://www.lavender.ai/) to draft and optimize emails, or [ChatGPT Writer](https://chatgptwriter.ai/) to generate entire email replies.
+- **Conduct a literature review** - Use [Elicit](https://elicit.org/) or [Consensus](https://consensus.app/search/) to search scientific papers and automatically extract key findings across dozens of studies.
+
+### Code and software development
+
+- **Autocomplete code in your IDE** - Install [GitHub Copilot](https://github.com/features/copilot), [Continue](https://www.continue.dev/), or [Tabnine](https://www.tabnine.com/) for real-time AI code suggestions as you type.
+- **Generate SQL from plain English** - Describe the query you need using [AI2sql](https://www.ai2sql.io/) or [Vanna.ai](https://vanna.ai/) and get production-ready SQL back.
+- **Scaffold an entire application** - Describe your project to [GPT Engineer](https://github.com/AntonOsika/gpt-engineer) or [GPT Pilot](https://github.com/Pythagora-io/gpt-pilot) and let it generate the full codebase with your oversight.
+- **Run a local LLM offline** - Use [Ollama](https://github.com/ollama/ollama) or [LM Studio](https://lmstudio.ai) to download and run models like Llama or Mistral entirely on your machine with no data leaving your computer.
+
+### Image generation and design
+
+- **Create product mockup images** - Describe your product in [Midjourney](https://www.midjourney.com/), [DALL·E 3](https://openai.com/index/dall-e-3/), or [Ideogram](https://ideogram.ai/) to generate photorealistic mockups without a photo shoot.
+- **Remove backgrounds from photos** - Use [PhotoRoom](https://www.photoroom.com/) or [ClipDrop](https://clipdrop.co/) to instantly isolate subjects from their backgrounds.
+- **Design a logo** - Generate logo concepts with [Brandmark](https://brandmark.io/) or [Ponzu](https://www.ponzu.ai/) by describing your brand's style and values.
+- **Build a slide deck** - Use [Gamma](https://gamma.app/) to generate a complete presentation from a topic description, with layouts and visuals included.
+
+### Video and animation
+
+- **Turn a script into a talking-head video** - Paste your script into [Synthesia](https://www.synthesia.io/) or [HeyGen](https://app.heygen.com/) and choose an AI avatar to present it, no camera or studio needed.
+- **Generate short video clips from text** - Use [Runway](https://runwayml.com/), [Pika](https://pika.art/), or [Sora](https://openai.com/sora) to create video clips by describing a scene in natural language.
+- **Create a personalized marketing video** - Use [Rephrase AI](https://www.rephrase.ai/) to produce hyper-personalized videos at scale for outreach campaigns.
+
+### Audio and music
+
+- **Clone a voice for narration** - Record a short sample and use [Eleven Labs](https://beta.elevenlabs.io/) or [Resemble AI](https://www.resemble.ai/) to generate natural-sounding voiceovers in that voice.
+- **Transcribe meeting recordings** - Run audio through [Whisper](https://github.com/openai/whisper) (locally) or [Otter.ai](https://otter.ai/) (cloud) to get accurate transcriptions with speaker labels.
+- **Compose background music for a video** - Describe the mood and style you want in [Suno AI](https://www.suno.ai/) or [AIVA](https://www.aiva.ai/) and receive an original royalty-free track.
+- **Add voice dictation to your workflow** - Use [Wispr Flow](https://wisprflow.ai/) to dictate text into any application on your computer using natural speech.
+
+### Research and productivity
+
+- **Build a knowledge base from your documents** - Feed your files into [quivr](https://github.com/StanGirard/quivr) or [privateGPT](https://github.com/imartinez/privateGPT) and chat with your own data privately.
+- **Automate meeting follow-ups** - Use [Fireflies.ai](https://fireflies.ai/) or [Read AI](https://www.read.ai/) to automatically transcribe meetings, extract action items, and send summaries.
+- **Compare AI models side by side** - Use [Chatbot Arena](https://lmarena.ai/) to test different LLMs on the same prompts and see which performs best for your use case.
+- **Create an interactive research report** - Use [STORM](https://storm.genie.stanford.edu/) to input a topic and receive a full-length report with citations, sourced from the web.
 
 ## Text
 
