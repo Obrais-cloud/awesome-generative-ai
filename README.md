@@ -237,6 +237,7 @@ Contributions to this list are welcome. Before submitting your suggestions, plea
 - [Devin](https://devin.ai/) - An autonomous AI software engineer by Cognition Labs.
 - [OpenDevin](https://github.com/OpenDevin/OpenDevin) - An autonomous agent designed to navigate the complexities of software engineering. #opensource
 - [Davika](https://github.com/stitionai/devika) - An agentic AI software engineer. #opensource
+- [OpenClaw](https://openclaw.ai/) - An open-source autonomous AI agent that executes tasks via LLMs through messaging platforms like WhatsApp, Discord, and Slack, with a skill marketplace for automation. [#opensource](https://github.com/openclaw/openclaw)
 
 ### Custom assistants
 
