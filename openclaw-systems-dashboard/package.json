@@ -1,0 +1,16 @@
+{
+  "name": "openclaw-systems-dashboard",
+  "version": "1.0.0",
+  "description": "Local-only OpenClaw Systems Dashboard — live data from the local OpenClaw installation",
+  "private": true,
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

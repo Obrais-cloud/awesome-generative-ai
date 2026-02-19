@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenClaw Systems Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="card">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="header-icon">🐾</div>
+      <div class="header-text">
+        <h1 class="header-title">OpenClaw</h1>
+        <p class="header-subtitle">
+          <span id="agent-name">[AGENT_NAME]</span> — Personal AI Agent — Full Configuration Overview
+        </p>
+      </div>
+      <div class="header-status">
+        <span class="health-dot" id="health-dot"></span>
+        <span class="health-label" id="health-label">Checking…</span>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-tile">
+        <div class="stat-icon">🤖</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-models">—</div>
+          <div class="stat-label">AI Models</div>
+        </div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-icon">⏱</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-cron">—</div>
+          <div class="stat-label">Cron Jobs</div>
+        </div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-icon">📡</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-channels">—</div>
+          <div class="stat-label">Channels</div>
+        </div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-icon">🔄</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-session">—</div>
+          <div class="stat-label">Session Life</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Model Stack -->
+    <div class="section">
+      <div class="section-title">🧠 AI Model Stack</div>
+      <div class="model-grid" id="model-grid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Automated Cron Jobs -->
+    <div class="section">
+      <div class="section-title">⏱ Automated Cron Jobs</div>
+      <div class="cron-list" id="cron-list">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Real-Time Gmail Pipeline -->
+    <div class="section">
+      <div class="section-title">📧 Real-Time Gmail Pipeline</div>
+      <div class="pipeline" id="pipeline">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Communication Channels -->
+    <div class="section">
+      <div class="section-title">💬 Communication Channels</div>
+      <div class="channel-row" id="channel-row">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Key Features -->
+    <div class="section">
+      <div class="section-title">⚡ Key Features</div>
+      <div class="features-grid" id="features-grid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="footer-line">· H/W — MAC MINI M4 ·</div>
+      <div class="footer-line footer-url">openclaw.ai</div>
+      <div class="footer-meta" id="footer-meta">
+        Last updated: <span id="last-updated">—</span>
+        <span id="stale-indicator" class="stale-indicator" style="display:none;">STALE</span>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

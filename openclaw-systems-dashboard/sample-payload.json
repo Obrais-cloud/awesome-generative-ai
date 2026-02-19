@@ -1,0 +1,125 @@
+{
+  "generatedAt": "2026-02-19T12:00:00.000Z",
+  "agentName": "Claw",
+  "gateway": {
+    "running": true,
+    "bind": "127.0.0.1",
+    "port": 3000,
+    "pid": 12345,
+    "rpcOk": true,
+    "_state": "ok"
+  },
+  "stats": {
+    "modelsCount": 5,
+    "cronCount": 6,
+    "channelsCount": 2,
+    "sessionLife": "24h"
+  },
+  "models": [
+    {
+      "alias": "opus",
+      "displayName": "Claude Opus 4",
+      "role": "Primary Reasoning Model",
+      "badge": "Paid",
+      "primary": true
+    },
+    {
+      "alias": "gpt",
+      "displayName": "GPT-4o",
+      "role": "Conversational Agent",
+      "badge": "Paid",
+      "primary": false
+    },
+    {
+      "alias": "kimi",
+      "displayName": "Kimi K2",
+      "role": "Long-Context Research",
+      "badge": "Free",
+      "primary": false
+    },
+    {
+      "alias": "flash",
+      "displayName": "Gemini 2.5 Flash",
+      "role": "Fast Drafting / Summaries",
+      "badge": "Free",
+      "primary": false
+    },
+    {
+      "alias": "deepseek",
+      "displayName": "DeepSeek R1",
+      "role": "Code & Math Reasoning",
+      "badge": "Free",
+      "primary": false
+    }
+  ],
+  "cronJobs": [
+    {
+      "name": "Morning News Digest",
+      "schedule": "0 7 * * *",
+      "status": "Active",
+      "lastRun": "2026-02-19T07:00:12.000Z"
+    },
+    {
+      "name": "Market Summary",
+      "schedule": "0 9,16 * * 1-5",
+      "status": "Active",
+      "lastRun": "2026-02-19T09:00:05.000Z"
+    },
+    {
+      "name": "Weekly Research Report",
+      "schedule": "0 10 * * 1",
+      "status": "Active",
+      "lastRun": "2026-02-17T10:00:08.000Z"
+    },
+    {
+      "name": "System Health Check",
+      "schedule": "*/30 * * * *",
+      "status": "Active",
+      "lastRun": "2026-02-19T11:30:01.000Z"
+    },
+    {
+      "name": "Backup Config Snapshot",
+      "schedule": "0 2 * * *",
+      "status": "Active",
+      "lastRun": "2026-02-19T02:00:03.000Z"
+    },
+    {
+      "name": "Old Logs Cleanup",
+      "schedule": "0 3 * * 0",
+      "status": "Disabled",
+      "lastRun": null
+    }
+  ],
+  "channels": [
+    {
+      "name": "Telegram",
+      "status": "Active",
+      "type": "telegram"
+    },
+    {
+      "name": "Discord",
+      "status": "Active",
+      "type": "discord"
+    }
+  ],
+  "pipeline": [
+    { "name": "Gmail", "state": "Unknown", "detail": "External service — cannot observe directly" },
+    { "name": "Pub/Sub", "state": "Unknown", "detail": "External service — cannot observe directly" },
+    { "name": "Tailscale Funnel", "state": "OK", "detail": "Gateway is running" },
+    { "name": "OpenClaw Hook", "state": "OK", "detail": "3 hook(s) registered" },
+    { "name": "GPT Agent", "state": "OK", "detail": "Inferred from gateway + hooks" },
+    { "name": "Telegram", "state": "OK", "detail": "Channel active" }
+  ],
+  "features": [
+    { "name": "Multi-Model AI Stack", "description": "5 AI models with automatic failover", "detected": null },
+    { "name": "Smart Email Processing", "description": "Gmail → AI pipeline with auto-classification", "detected": null },
+    { "name": "Automated Scheduling", "description": "Cron-based tasks for news, markets & content", "detected": null },
+    { "name": "Secure Local Gateway", "description": "Localhost-bound reverse proxy", "detected": true },
+    { "name": "Real-Time Notifications", "description": "Telegram & Discord integration", "detected": null },
+    { "name": "Privacy First", "description": "All data processed locally on device", "detected": true }
+  ],
+  "health": {
+    "state": "ok",
+    "reasons": []
+  }
+}

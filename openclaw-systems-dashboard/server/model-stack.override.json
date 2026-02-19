@@ -1,0 +1,36 @@
+{
+  "_comment": "Override / supplement model display info. NO secrets allowed. This file is optional.",
+  "models": [
+    {
+      "alias": "opus",
+      "displayName": "Claude Opus 4",
+      "role": "Primary Reasoning Model",
+      "badge": "Paid",
+      "primary": true
+    },
+    {
+      "alias": "gpt",
+      "displayName": "GPT-4o",
+      "role": "Conversational Agent",
+      "badge": "Paid"
+    },
+    {
+      "alias": "kimi",
+      "displayName": "Kimi K2",
+      "role": "Long-Context Research",
+      "badge": "Free"
+    },
+    {
+      "alias": "flash",
+      "displayName": "Gemini 2.5 Flash",
+      "role": "Fast Drafting / Summaries",
+      "badge": "Free"
+    },
+    {
+      "alias": "deepseek",
+      "displayName": "DeepSeek R1",
+      "role": "Code & Math Reasoning",
+      "badge": "Free"
+    }
+  ]
+}
