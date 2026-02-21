@@ -316,8 +316,10 @@ app.all('/api/*', (_req, res) => {
   res.status(404).json({ error: 'Not found' });
 });
 
-// ── Startup safety check ──────────────────────────────────────────────────
-function startServer() {
+// ── Startup ──────────────────────────────────────────────────────────────
+function startServer(portOverride) {
+  const port = portOverride || PORT;
+
   if (REMOTE_MODE && !TOKEN) {
     console.error('FATAL: DASHBOARD_TOKEN is required when binding to a non-loopback address.');
     console.error('  Set DASHBOARD_TOKEN=<your-secret> to enable remote access.');
@@ -325,17 +327,22 @@ function startServer() {
   }
 
   const mode = REMOTE_MODE ? 'Remote (token-protected)' : 'Local-only';
-  const url = `http://${HOST === '0.0.0.0' ? '<your-ip>' : HOST}:${PORT}`;
+  const url = `http://${HOST === '0.0.0.0' ? '<your-ip>' : HOST}:${port}`;
 
-  app.listen(PORT, HOST, () => {
-    console.log(`\n  ┌──────────────────────────────────────────────┐`);
-    console.log(`  │  OpenClaw Systems Dashboard                  │`);
-    console.log(`  │  ${url.padEnd(42)}│`);
-    console.log(`  │  ${mode.padEnd(42)}│`);
-    console.log(`  │  Auto-refresh 15 s                           │`);
-    console.log(`  │  Security: headers + rate-limit + audit log  │`);
-    console.log(`  └──────────────────────────────────────────────┘\n`);
+  return new Promise((resolve) => {
+    const server = app.listen(port, HOST, () => {
+      console.log(`\n  ┌──────────────────────────────────────────────┐`);
+      console.log(`  │  OpenClaw Systems Dashboard                  │`);
+      console.log(`  │  ${url.padEnd(42)}│`);
+      console.log(`  │  ${mode.padEnd(42)}│`);
+      console.log(`  │  Auto-refresh 15 s                           │`);
+      console.log(`  │  Security: headers + rate-limit + audit log  │`);
+      console.log(`  └──────────────────────────────────────────────┘\n`);
+      resolve({ server, port, url: `http://127.0.0.1:${port}` });
+    });
   });
 }
 
-startServer();
+// Export for Electron; run standalone when executed directly
+module.exports = { startServer };
+if (require.main === module) startServer();

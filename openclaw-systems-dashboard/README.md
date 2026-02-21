@@ -1,13 +1,32 @@
 # OpenClaw Systems Dashboard
 
-Local-only web dashboard that displays live system state from a local OpenClaw installation.
+Desktop app + web dashboard for monitoring and controlling your local OpenClaw installation.
 
-## Quick Start
+## Quick Start — Desktop App (Recommended)
 
 ```bash
-cd /.openclaw/workspace/openclaw-systems-dashboard
+cd openclaw-systems-dashboard
 npm install
-npm start        # or: npm run dev
+npm run electron
+```
+
+This opens a native window with the dashboard — no browser needed.
+
+### Build Installers
+
+```bash
+npm run dist            # Build for current platform
+npm run dist:mac        # macOS → .dmg + .zip
+npm run dist:win        # Windows → .exe installer + portable
+npm run dist:linux      # Linux → .AppImage + .deb
+```
+
+Installers are output to `dist/`.
+
+## Quick Start — Browser Mode
+
+```bash
+npm start
 ```
 
 Open **http://127.0.0.1:8789** in your browser.
@@ -133,8 +152,10 @@ openclaw-systems-dashboard/
 ├── package.json
 ├── README.md
 ├── sample-payload.json
+├── electron/
+│   └── main.js                # Electron main process
 ├── server/
-│   ├── index.js               # Express server entry point
+│   ├── index.js               # Express server (works standalone + embedded)
 │   ├── collector.js            # CLI data collection + summary builder
 │   ├── cache.js                # In-memory TTL cache (5 s)
 │   ├── redactor.js             # Secret redaction layer

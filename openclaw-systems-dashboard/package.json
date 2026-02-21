@@ -1,14 +1,52 @@
 {
   "name": "openclaw-systems-dashboard",
   "version": "1.0.0",
-  "description": "Local-only OpenClaw Systems Dashboard — live data from the local OpenClaw installation",
+  "description": "OpenClaw Systems Dashboard — desktop app for monitoring your OpenClaw installation",
   "private": true,
+  "main": "electron/main.js",
   "scripts": {
     "start": "node server/index.js",
-    "dev": "node server/index.js"
+    "dev": "node server/index.js",
+    "electron": "electron .",
+    "dist": "electron-builder",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win",
+    "dist:linux": "electron-builder --linux"
   },
   "dependencies": {
     "express": "^4.21.0"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.0"
+  },
+  "build": {
+    "appId": "dev.openclaw.dashboard",
+    "productName": "OpenClaw Dashboard",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "server/**/*",
+      "public/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": ["dmg", "zip"]
+    },
+    "win": {
+      "target": ["nsis", "portable"]
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Development"
+    },
+    "nsis": {
+      "oneClick": true,
+      "allowToChangeInstallationDirectory": false
+    }
   },
   "engines": {
     "node": ">=18.0.0"
