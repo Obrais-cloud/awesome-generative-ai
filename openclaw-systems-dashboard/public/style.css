@@ -1458,6 +1458,406 @@ body {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
+/* ── Token Usage Panel ───────────────────────────────────────────── */
+.token-usage-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.token-usage-summary {
+  display: flex;
+  gap: 14px;
+}
+
+.token-stat {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+.token-stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.token-stat-label {
+  font-size: 11px;
+  color: #7878a0;
+  text-transform: uppercase;
+}
+
+.token-breakdown {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.token-provider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+}
+
+.token-provider-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #c4c4d8;
+  flex: 1;
+}
+
+.token-provider-cost {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fcd34d;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+.token-provider-tokens {
+  font-size: 10px;
+  color: #6868a0;
+}
+
+/* ── Memory Panel ───────────────────────────────────────────────── */
+.memory-controls {
+  margin-bottom: 12px;
+}
+
+.memory-panel {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 16px 22px;
+}
+
+.memory-status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.memory-status-dot.indexed {
+  background: #34d399;
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
+}
+.memory-status-dot.unindexed {
+  background: #fbbf24;
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
+}
+
+.memory-info {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.memory-prop {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.memory-prop-label {
+  font-size: 10px;
+  color: #6868a0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.memory-prop-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #c4c4d8;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+/* ── Sessions List ──────────────────────────────────────────────── */
+.sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.session-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.session-active-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.session-active-dot.active {
+  background: #34d399;
+}
+.session-active-dot.inactive {
+  background: #555;
+}
+
+.session-channel {
+  font-weight: 600;
+  color: #c4c4d8;
+  min-width: 80px;
+}
+
+.session-agent {
+  color: #a5b4fc;
+  min-width: 80px;
+}
+
+.session-msgs {
+  color: #7878a0;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+.session-time {
+  color: #6868a0;
+  margin-left: auto;
+  font-size: 11px;
+}
+
+/* ── Nodes & Devices Panel ──────────────────────────────────────── */
+.nodes-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.nodes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.node-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+}
+
+.node-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.node-status-dot.online { background: #34d399; }
+.node-status-dot.offline { background: #f87171; }
+.node-status-dot.pending { background: #fbbf24; }
+
+.node-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.node-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e2e2f0;
+}
+
+.node-meta {
+  font-size: 10px;
+  color: #6868a0;
+  margin-top: 2px;
+}
+
+.device-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+}
+
+.device-card.current {
+  border-color: rgba(99, 102, 241, 0.2);
+  background: rgba(99, 102, 241, 0.04);
+}
+
+.device-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #c4c4d8;
+  flex: 1;
+}
+
+.device-platform {
+  font-size: 10px;
+  color: #6868a0;
+}
+
+/* ── Heartbeat Panel ────────────────────────────────────────────── */
+.heartbeat-panel {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 14px 22px;
+}
+
+.heartbeat-pulse {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.heartbeat-pulse.active {
+  background: #f87171;
+  animation: heartbeat-anim 1.2s ease-in-out infinite;
+}
+.heartbeat-pulse.inactive {
+  background: #555;
+}
+
+@keyframes heartbeat-anim {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
+}
+
+.heartbeat-info {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.heartbeat-prop {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.heartbeat-prop-label {
+  font-size: 10px;
+  color: #6868a0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.heartbeat-prop-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #c4c4d8;
+}
+
+/* ── Accessibility: Focus Indicators ─────────────────────────────── */
+.btn:focus-visible {
+  outline: 2px solid #818cf8;
+  outline-offset: 2px;
+}
+
+.quick-action-card:focus-visible {
+  outline: 2px solid #818cf8;
+  outline-offset: 2px;
+}
+
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #818cf8;
+  outline-offset: 2px;
+}
+
+/* ── Accessibility: Skip link ────────────────────────────────────── */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 9999;
+  padding: 12px 20px;
+  background: #1a1a24;
+  color: #a5b4fc;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 0 0 8px 0;
+  text-decoration: none;
+}
+.skip-link:focus {
+  left: 0;
+  top: 0;
+  width: auto;
+  height: auto;
+  outline: 2px solid #818cf8;
+}
+
+/* ── Responsive: Tablet ─────────────────────────────────────────── */
+@media (max-width: 768px) {
+  body { padding: 16px 8px; }
+  .card { padding: 24px 20px 20px; border-radius: 14px; }
+  .header { gap: 12px; margin-bottom: 20px; }
+  .header-title { font-size: 20px; }
+  .header-icon { font-size: 28px; width: 44px; height: 44px; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .secondary-stats { grid-template-columns: repeat(4, 1fr); }
+  .model-grid.has-secondary { grid-template-columns: 1fr; }
+  .model-mgmt-grid { grid-template-columns: 1fr; }
+  .skills-list { grid-template-columns: 1fr; }
+  .features-grid { grid-template-columns: repeat(2, 1fr); }
+  .config-grid { grid-template-columns: repeat(2, 1fr); }
+  .pipeline { flex-wrap: wrap; gap: 4px; padding: 14px 16px; }
+  .pipeline-arrow { padding: 0 4px; }
+  .quick-start-actions { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .sandbox-props { grid-template-columns: repeat(2, 1fr); }
+  .gateway-info { grid-template-columns: repeat(2, 1fr); }
+  .memory-info { grid-template-columns: repeat(2, 1fr); }
+  .heartbeat-info { grid-template-columns: repeat(3, 1fr); }
+  .security-summary { flex-wrap: wrap; }
+}
+
+/* ── Responsive: Phone ──────────────────────────────────────────── */
+@media (max-width: 480px) {
+  body { padding: 8px 4px; }
+  .card { padding: 16px 14px 14px; border-radius: 10px; }
+  .header-title { font-size: 18px; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .secondary-stats { grid-template-columns: repeat(2, 1fr); }
+  .stat-tile { padding: 12px 14px; }
+  .features-grid { grid-template-columns: 1fr; }
+  .config-grid { grid-template-columns: 1fr; }
+  .quick-start-actions { grid-template-columns: repeat(2, 1fr); }
+  .control-group { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .control-buttons { width: 100%; }
+  .gateway-info { grid-template-columns: 1fr 1fr; }
+  .memory-info { grid-template-columns: 1fr 1fr; }
+  .sandbox-props { grid-template-columns: 1fr; }
+  .channel-row { flex-direction: column; }
+  .channel-chip { min-width: auto; }
+  .token-usage-summary { flex-direction: column; }
+}
+
 /* ── Scrollbar ───────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }

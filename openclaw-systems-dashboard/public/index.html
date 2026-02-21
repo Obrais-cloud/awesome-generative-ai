@@ -7,7 +7,8 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="card">
+  <a href="#quick-start-section" class="skip-link">Skip to Quick Start</a>
+  <div class="card" role="main">
 
     <!-- Header -->
     <div class="header">
@@ -84,6 +85,34 @@
         <div class="stat-info">
           <div class="stat-value" id="stat-browser">—</div>
           <div class="stat-label">Browser</div>
+        </div>
+      </div>
+      <div class="stat-tile stat-mini">
+        <div class="stat-icon">💰</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-cost">—</div>
+          <div class="stat-label">Cost</div>
+        </div>
+      </div>
+      <div class="stat-tile stat-mini">
+        <div class="stat-icon">🧠</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-memory">—</div>
+          <div class="stat-label">Memory</div>
+        </div>
+      </div>
+      <div class="stat-tile stat-mini">
+        <div class="stat-icon">💓</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-heartbeat">—</div>
+          <div class="stat-label">Heartbeat</div>
+        </div>
+      </div>
+      <div class="stat-tile stat-mini">
+        <div class="stat-icon">🖥</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-devices">—</div>
+          <div class="stat-label">Devices</div>
         </div>
       </div>
     </div>
@@ -210,6 +239,49 @@
       </div>
     </div>
 
+    <!-- Token Usage -->
+    <div class="section">
+      <div class="section-title">💰 Token Usage & Cost <span class="help-tip" data-tip="API token consumption and cost tracking across providers">?</span></div>
+      <div class="token-usage-panel" id="token-usage-panel">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Memory System -->
+    <div class="section">
+      <div class="section-title">🧠 Memory <span class="help-tip" data-tip="Persistent memory index for semantic search across conversations">?</span></div>
+      <div class="memory-controls">
+        <button class="btn btn-action" onclick="confirmAction('memoryIndex', 'Rebuild the memory index? This may take a moment.')">🔄 Reindex</button>
+      </div>
+      <div class="memory-panel" id="memory-panel">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Active Sessions -->
+    <div class="section">
+      <div class="section-title">💬 Active Sessions <span class="help-tip" data-tip="Recent conversation sessions across channels">?</span></div>
+      <div class="sessions-list" id="sessions-list">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Nodes & Devices -->
+    <div class="section">
+      <div class="section-title">🖥 Nodes & Devices <span class="help-tip" data-tip="Connected devices and remote nodes running OpenClaw">?</span></div>
+      <div class="nodes-panel" id="nodes-panel">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Heartbeat -->
+    <div class="section">
+      <div class="section-title">💓 System Heartbeat</div>
+      <div class="heartbeat-panel" id="heartbeat-panel">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
     <!-- Key Features -->
     <div class="section">
       <div class="section-title">⚡ Key Features</div>
@@ -238,42 +310,42 @@
         <div class="quick-start-title">What would you like to do?</div>
         <div class="quick-start-desc">Common actions to get you started quickly. Each action runs with confirmation for safety.</div>
         <div class="quick-start-actions">
-          <div class="quick-action-card" onclick="runDiagnostics()">
+          <div class="quick-action-card" tabindex="0" role="button" onclick="runDiagnostics()">
             <div class="quick-action-icon">🩺</div>
             <div class="quick-action-label">Health Check</div>
             <div class="quick-action-hint">Run full diagnostics</div>
           </div>
-          <div class="quick-action-card" onclick="runSecurityAudit()">
+          <div class="quick-action-card" tabindex="0" role="button" onclick="runSecurityAudit()">
             <div class="quick-action-icon">🛡</div>
             <div class="quick-action-label">Security Scan</div>
             <div class="quick-action-hint">Audit your setup</div>
           </div>
-          <div class="quick-action-card" onclick="probeModels()">
+          <div class="quick-action-card" tabindex="0" role="button" onclick="probeModels()">
             <div class="quick-action-icon">📡</div>
             <div class="quick-action-label">Probe Models</div>
             <div class="quick-action-hint">Test AI endpoints</div>
           </div>
-          <div class="quick-action-card" onclick="confirmAction('skillUpdate', 'Update all installed skills from ClawHub?')">
+          <div class="quick-action-card" tabindex="0" role="button" onclick="confirmAction('skillUpdate', 'Update all installed skills from ClawHub?')">
             <div class="quick-action-icon">⬆</div>
             <div class="quick-action-label">Update Skills</div>
             <div class="quick-action-hint">Get latest from ClawHub</div>
           </div>
-          <div class="quick-action-card" onclick="confirmAction('doctorFix', 'Run auto-fix? This will resolve common issues automatically.')">
+          <div class="quick-action-card" tabindex="0" role="button" onclick="confirmAction('doctorFix', 'Run auto-fix? This will resolve common issues automatically.')">
             <div class="quick-action-icon">🔧</div>
             <div class="quick-action-label">Auto-Fix</div>
             <div class="quick-action-hint">Fix common issues</div>
           </div>
-          <div class="quick-action-card" onclick="fetchDeepStatus()">
+          <div class="quick-action-card" tabindex="0" role="button" onclick="fetchDeepStatus()">
             <div class="quick-action-icon">📊</div>
             <div class="quick-action-label">Deep Status</div>
             <div class="quick-action-hint">Full system report</div>
           </div>
-          <div class="quick-action-card" onclick="fetchLogs()">
+          <div class="quick-action-card" tabindex="0" role="button" onclick="fetchLogs()">
             <div class="quick-action-icon">📋</div>
             <div class="quick-action-label">View Logs</div>
             <div class="quick-action-hint">Recent activity</div>
           </div>
-          <div class="quick-action-card" onclick="confirmAction('restart', 'Restart the OpenClaw agent?')">
+          <div class="quick-action-card" tabindex="0" role="button" onclick="confirmAction('restart', 'Restart the OpenClaw agent?')">
             <div class="quick-action-icon">↻</div>
             <div class="quick-action-label">Restart Agent</div>
             <div class="quick-action-hint">Fresh restart</div>
@@ -322,6 +394,19 @@
           <div class="control-buttons">
             <button class="btn btn-action" onclick="confirmAction('sandboxEnable', 'Enable sandbox mode?')">🔒 Enable</button>
             <button class="btn btn-action btn-warn" onclick="confirmAction('sandboxDisable', 'Disable sandbox mode? Commands will run without isolation.')">🔓 Disable</button>
+          </div>
+        </div>
+        <div class="control-group">
+          <div class="control-group-label">Heartbeat</div>
+          <div class="control-buttons">
+            <button class="btn btn-action" onclick="runAction('heartbeatEnable')">💓 Enable</button>
+            <button class="btn btn-action btn-ghost" onclick="runAction('heartbeatDisable')">⏸ Disable</button>
+          </div>
+        </div>
+        <div class="control-group">
+          <div class="control-group-label">Sessions</div>
+          <div class="control-buttons">
+            <button class="btn btn-action btn-danger" onclick="confirmAction('sessionReset', 'Reset all sessions? This clears all conversation history.')">🗑 Reset All</button>
           </div>
         </div>
       </div>

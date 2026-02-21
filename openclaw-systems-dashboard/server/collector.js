@@ -39,6 +39,22 @@ const ALLOWED_COMMANDS = {
   securityAudit: { args: ['security', 'audit', '--json'] },
   // Sandbox
   sandboxStatus: { args: ['sandbox', 'status', '--json'] },
+  // Token usage / cost tracking
+  statusUsage:  { args: ['status', '--usage', '--json'] },
+  // Memory system
+  memoryStat:   { args: ['memory', 'status', '--json'] },
+  // Sessions
+  sessionsList: { args: ['sessions', '--json'] },
+  // Nodes & devices
+  nodesList:    { args: ['nodes', 'list', '--json'] },
+  nodesPending: { args: ['nodes', 'pending', '--json'] },
+  devicesList:  { args: ['devices', 'list', '--json'] },
+  // Approvals
+  approvalsGet: { args: ['approvals', 'get', '--json'] },
+  // System heartbeat
+  heartbeatLast: { args: ['system', 'heartbeat', 'last', '--json'] },
+  // Health probe (gateway)
+  healthProbe:  { args: ['health', '--json', '--verbose'] },
 };
 
 // ---------------------------------------------------------------------------
@@ -71,6 +87,16 @@ const ALLOWED_ACTIONS = {
   // Sandbox actions
   sandboxEnable:    { args: ['sandbox', 'enable'],           description: 'Enable sandbox mode' },
   sandboxDisable:   { args: ['sandbox', 'disable'],          description: 'Disable sandbox mode' },
+  // Memory actions
+  memoryIndex:      { args: ['memory', 'index'],             description: 'Rebuild the memory index' },
+  // Node/device management
+  nodeApprove:      { args: ['nodes', 'approve'],            description: 'Approve a pending node',    acceptsId: true },
+  deviceRevoke:     { args: ['devices', 'revoke'],           description: 'Revoke a device token',     acceptsId: true },
+  // Heartbeat
+  heartbeatEnable:  { args: ['system', 'heartbeat', 'enable'], description: 'Enable system heartbeat' },
+  heartbeatDisable: { args: ['system', 'heartbeat', 'disable'], description: 'Disable system heartbeat' },
+  // Session management
+  sessionReset:     { args: ['reset', '--scope', 'sessions'], description: 'Reset all sessions' },
 };
 
 // Resolve openclaw binary — honour env override
@@ -520,6 +546,124 @@ function buildConfig(configData) {
 }
 
 // ---------------------------------------------------------------------------
+// Token usage / cost builder
+// ---------------------------------------------------------------------------
+function buildTokenUsage(usageData) {
+  if (!usageData || usageData._error) return null;
+  const providers = usageData.providers || usageData.usage || [];
+  const providerList = Array.isArray(providers) ? providers : [];
+  let totalTokens = 0;
+  let totalCost = 0;
+  const breakdown = providerList.map((p) => {
+    const tokens = p.tokens || p.totalTokens || p.total_tokens || 0;
+    const cost = p.cost || p.totalCost || p.total_cost || 0;
+    totalTokens += tokens;
+    totalCost += cost;
+    return {
+      provider: p.provider || p.name || 'Unknown',
+      model: p.model || '',
+      tokens,
+      cost: Math.round(cost * 100) / 100,
+      inputTokens: p.inputTokens || p.input_tokens || 0,
+      outputTokens: p.outputTokens || p.output_tokens || 0,
+    };
+  });
+  return {
+    totalTokens,
+    totalCost: Math.round(totalCost * 100) / 100,
+    breakdown,
+    currency: usageData.currency || 'USD',
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Memory status builder
+// ---------------------------------------------------------------------------
+function buildMemoryStatus(memData) {
+  if (!memData || memData._error) return null;
+  return {
+    indexed: memData.indexed !== false,
+    fileCount: memData.fileCount || memData.file_count || memData.files || 0,
+    totalEntries: memData.totalEntries || memData.total_entries || memData.entries || 0,
+    lastIndexed: memData.lastIndexed || memData.last_indexed || null,
+    embeddingProvider: memData.embeddingProvider || memData.embedding_provider || null,
+    searchable: memData.searchable !== false,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Sessions builder
+// ---------------------------------------------------------------------------
+function buildSessions(sessionsData) {
+  if (!sessionsData || sessionsData._error) return [];
+  const sessions = Array.isArray(sessionsData) ? sessionsData : (sessionsData.sessions || []);
+  return sessions.slice(0, 10).map((s) => ({
+    id: s.id || s.sessionId || '',
+    channel: s.channel || s.type || '',
+    agent: s.agent || s.agentName || '',
+    startedAt: s.startedAt || s.started_at || s.created_at || null,
+    messageCount: s.messageCount || s.message_count || s.messages || 0,
+    active: s.active !== false,
+  }));
+}
+
+// ---------------------------------------------------------------------------
+// Nodes & devices builder
+// ---------------------------------------------------------------------------
+function buildNodes(nodesData, pendingData) {
+  const nodes = [];
+  if (nodesData && !nodesData._error) {
+    const list = Array.isArray(nodesData) ? nodesData : (nodesData.nodes || []);
+    for (const n of list) {
+      nodes.push({
+        id: n.id || n.nodeId || '',
+        name: n.name || n.hostname || '',
+        status: n.status || (n.online ? 'online' : 'offline'),
+        lastSeen: n.lastSeen || n.last_seen || null,
+        platform: n.platform || n.os || '',
+      });
+    }
+  }
+  const pending = [];
+  if (pendingData && !pendingData._error) {
+    const list = Array.isArray(pendingData) ? pendingData : (pendingData.pending || pendingData.nodes || []);
+    for (const n of list) {
+      pending.push({
+        id: n.id || n.nodeId || '',
+        name: n.name || n.hostname || '',
+        requestedAt: n.requestedAt || n.created_at || null,
+      });
+    }
+  }
+  return { nodes, pending };
+}
+
+function buildDevices(devicesData) {
+  if (!devicesData || devicesData._error) return [];
+  const list = Array.isArray(devicesData) ? devicesData : (devicesData.devices || []);
+  return list.map((d) => ({
+    id: d.id || d.deviceId || '',
+    name: d.name || d.label || '',
+    platform: d.platform || d.os || '',
+    lastActive: d.lastActive || d.last_active || null,
+    current: !!d.current,
+  }));
+}
+
+// ---------------------------------------------------------------------------
+// Heartbeat builder
+// ---------------------------------------------------------------------------
+function buildHeartbeat(heartbeatData) {
+  if (!heartbeatData || heartbeatData._error) return null;
+  return {
+    enabled: heartbeatData.enabled !== false,
+    lastBeat: heartbeatData.lastBeat || heartbeatData.last_beat || heartbeatData.timestamp || null,
+    interval: heartbeatData.interval || null,
+    status: heartbeatData.status || (heartbeatData.enabled ? 'active' : 'disabled'),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Main collector — runs all CLI calls concurrently, builds summary
 // ---------------------------------------------------------------------------
 async function collectAll() {
@@ -541,6 +685,13 @@ async function collectAll() {
     sandboxData,
     browserData,
     configData,
+    usageData,
+    memoryData,
+    sessionsData,
+    nodesData,
+    nodesPendingData,
+    devicesData,
+    heartbeatData,
   ] = await Promise.all([
     runCommand('status'),
     runCommand('cronList'),
@@ -559,6 +710,13 @@ async function collectAll() {
     runCommand('sandboxStatus'),
     runCommand('browserStat'),
     runCommand('configShow'),
+    runCommand('statusUsage'),
+    runCommand('memoryStat'),
+    runCommand('sessionsList'),
+    runCommand('nodesList'),
+    runCommand('nodesPending'),
+    runCommand('devicesList'),
+    runCommand('heartbeatLast'),
   ]);
 
   const gateway = parseGatewayStatus(gatewayData);
@@ -573,6 +731,12 @@ async function collectAll() {
   const sandbox = buildSandboxStatus(sandboxData);
   const browser = buildBrowserStatus(browserData);
   const config = buildConfig(configData);
+  const tokenUsage = buildTokenUsage(usageData);
+  const memory = buildMemoryStatus(memoryData);
+  const sessions = buildSessions(sessionsData);
+  const nodesInfo = buildNodes(nodesData, nodesPendingData);
+  const devices = buildDevices(devicesData);
+  const heartbeat = buildHeartbeat(heartbeatData);
   const features = buildFeatures(gateway);
   const health = computeHealth(gateway, cronJobs, channels, pipeline);
 
@@ -621,6 +785,12 @@ async function collectAll() {
     sandbox,
     browser,
     config,
+    tokenUsage,
+    memory,
+    sessions,
+    nodes: nodesInfo,
+    devices,
+    heartbeat,
     features,
     health,
   };

@@ -83,6 +83,11 @@ function render(d) {
   renderSandbox(d.sandbox);
   renderBrowser(d.browser);
   renderConfig(d.config);
+  renderTokenUsage(d.tokenUsage);
+  renderMemory(d.memory);
+  renderSessions(d.sessions || []);
+  renderNodesAndDevices(d.nodes, d.devices || []);
+  renderHeartbeat(d.heartbeat);
   renderFeatures(d.features || []);
 
   // Keep channel data for control panel
@@ -135,6 +140,40 @@ function renderSecondaryStats(d) {
     $('stat-browser').textContent = '—';
     $('stat-browser').style.color = '';
   }
+
+  // Cost
+  const tu = d.tokenUsage;
+  if (tu) {
+    $('stat-cost').textContent = '$' + (tu.totalCost || 0).toFixed(2);
+    $('stat-cost').style.color = tu.totalCost > 10 ? '#fca5a5' : tu.totalCost > 5 ? '#fcd34d' : '#6ee7b7';
+  } else {
+    $('stat-cost').textContent = '—';
+    $('stat-cost').style.color = '';
+  }
+
+  // Memory
+  const mem = d.memory;
+  if (mem) {
+    $('stat-memory').textContent = mem.indexed ? mem.totalEntries || 'OK' : 'N/A';
+    $('stat-memory').style.color = mem.indexed ? '#6ee7b7' : '#fcd34d';
+  } else {
+    $('stat-memory').textContent = '—';
+    $('stat-memory').style.color = '';
+  }
+
+  // Heartbeat
+  const hb = d.heartbeat;
+  if (hb) {
+    $('stat-heartbeat').textContent = hb.enabled ? 'Active' : 'Off';
+    $('stat-heartbeat').style.color = hb.enabled ? '#6ee7b7' : '#9ca3af';
+  } else {
+    $('stat-heartbeat').textContent = '—';
+    $('stat-heartbeat').style.color = '';
+  }
+
+  // Devices
+  const devs = d.devices || [];
+  $('stat-devices').textContent = devs.length || '—';
 }
 
 function renderHealthReasons(health) {
@@ -660,6 +699,200 @@ async function fetchConfigDetails() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// TOKEN USAGE & COST
+// ═══════════════════════════════════════════════════════════════════
+
+function renderTokenUsage(usage) {
+  const panel = $('token-usage-panel');
+  if (!usage) {
+    panel.innerHTML = '<div class="empty-state">Token usage data unavailable</div>';
+    return;
+  }
+
+  const formatTokens = (n) => n >= 1000000 ? (n / 1000000).toFixed(1) + 'M' : n >= 1000 ? (n / 1000).toFixed(1) + 'K' : String(n);
+
+  let html = `
+    <div class="token-usage-summary">
+      <div class="token-stat">
+        <div>
+          <div class="token-stat-value">${formatTokens(usage.totalTokens)}</div>
+          <div class="token-stat-label">Total Tokens</div>
+        </div>
+      </div>
+      <div class="token-stat">
+        <div>
+          <div class="token-stat-value" style="color:#fcd34d">$${usage.totalCost.toFixed(2)}</div>
+          <div class="token-stat-label">Estimated Cost (${esc(usage.currency)})</div>
+        </div>
+      </div>
+    </div>`;
+
+  if (usage.breakdown && usage.breakdown.length) {
+    html += '<div class="token-breakdown">';
+    for (const p of usage.breakdown) {
+      html += `
+        <div class="token-provider">
+          <div class="token-provider-name">${esc(p.provider)}${p.model ? ' <span style="color:#6868a0;font-weight:400">(' + esc(p.model) + ')</span>' : ''}</div>
+          <div class="token-provider-cost">$${p.cost.toFixed(2)}</div>
+          <div class="token-provider-tokens">${formatTokens(p.tokens)} tok</div>
+        </div>`;
+    }
+    html += '</div>';
+  }
+
+  panel.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MEMORY
+// ═══════════════════════════════════════════════════════════════════
+
+function renderMemory(memory) {
+  const panel = $('memory-panel');
+  if (!memory) {
+    panel.innerHTML = '<div class="empty-state">Memory system unavailable</div>';
+    return;
+  }
+  const dotClass = memory.indexed ? 'indexed' : 'unindexed';
+  const lastIndexed = memory.lastIndexed ? new Date(memory.lastIndexed).toLocaleString() : '—';
+  panel.innerHTML = `
+    <div class="memory-status-dot ${dotClass}"></div>
+    <div class="memory-info">
+      <div class="memory-prop">
+        <div class="memory-prop-label">Status</div>
+        <div class="memory-prop-value">${memory.indexed ? 'Indexed' : 'Not Indexed'}</div>
+      </div>
+      <div class="memory-prop">
+        <div class="memory-prop-label">Files</div>
+        <div class="memory-prop-value">${memory.fileCount || 0}</div>
+      </div>
+      <div class="memory-prop">
+        <div class="memory-prop-label">Entries</div>
+        <div class="memory-prop-value">${memory.totalEntries || 0}</div>
+      </div>
+      <div class="memory-prop">
+        <div class="memory-prop-label">Last Indexed</div>
+        <div class="memory-prop-value">${esc(lastIndexed)}</div>
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SESSIONS
+// ═══════════════════════════════════════════════════════════════════
+
+function renderSessions(sessions) {
+  const list = $('sessions-list');
+  if (!sessions.length) {
+    list.innerHTML = '<div class="empty-state">No active sessions</div>';
+    return;
+  }
+  list.innerHTML = sessions.map((s) => {
+    const dotClass = s.active ? 'active' : 'inactive';
+    const time = s.startedAt ? new Date(s.startedAt).toLocaleTimeString() : '';
+    return `
+      <div class="session-item">
+        <div class="session-active-dot ${dotClass}"></div>
+        <div class="session-channel">${esc(s.channel || '—')}</div>
+        <div class="session-agent">${esc(s.agent || '—')}</div>
+        <div class="session-msgs">${s.messageCount || 0} msgs</div>
+        <div class="session-time">${esc(time)}</div>
+      </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// NODES & DEVICES
+// ═══════════════════════════════════════════════════════════════════
+
+function renderNodesAndDevices(nodesInfo, devices) {
+  const panel = $('nodes-panel');
+  const nodes = nodesInfo ? nodesInfo.nodes || [] : [];
+  const pending = nodesInfo ? nodesInfo.pending || [] : [];
+
+  if (!nodes.length && !pending.length && !devices.length) {
+    panel.innerHTML = '<div class="empty-state">No nodes or devices detected</div>';
+    return;
+  }
+
+  let html = '';
+
+  // Nodes
+  if (nodes.length || pending.length) {
+    html += '<div class="subsection-title">Nodes</div><div class="nodes-grid">';
+    for (const n of nodes) {
+      const dotClass = n.status === 'online' ? 'online' : 'offline';
+      html += `
+        <div class="node-card">
+          <div class="node-status-dot ${dotClass}"></div>
+          <div class="node-info">
+            <div class="node-name">${esc(n.name || n.id)}</div>
+            <div class="node-meta">${esc(n.platform || '')}${n.lastSeen ? ' · ' + new Date(n.lastSeen).toLocaleString() : ''}</div>
+          </div>
+        </div>`;
+    }
+    for (const n of pending) {
+      html += `
+        <div class="node-card">
+          <div class="node-status-dot pending"></div>
+          <div class="node-info">
+            <div class="node-name">${esc(n.name || n.id)}</div>
+            <div class="node-meta">Pending approval</div>
+          </div>
+          <button class="btn btn-sm btn-action" onclick="runAction('nodeApprove','${esc(n.id)}')">✓ Approve</button>
+        </div>`;
+    }
+    html += '</div>';
+  }
+
+  // Devices
+  if (devices.length) {
+    html += '<div class="subsection-title">Devices</div><div class="nodes-grid">';
+    for (const d of devices) {
+      html += `
+        <div class="device-card${d.current ? ' current' : ''}">
+          <div class="device-name">${esc(d.name || d.id)}${d.current ? ' <span class="pill pill-primary-tag">THIS</span>' : ''}</div>
+          <div class="device-platform">${esc(d.platform || '')}</div>
+          ${!d.current ? `<button class="btn btn-sm btn-ghost" onclick="confirmAction('deviceRevoke','Revoke device ${esc(d.name || d.id)}?','${esc(d.id)}')" title="Revoke">✕</button>` : ''}
+        </div>`;
+    }
+    html += '</div>';
+  }
+
+  panel.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// HEARTBEAT
+// ═══════════════════════════════════════════════════════════════════
+
+function renderHeartbeat(heartbeat) {
+  const panel = $('heartbeat-panel');
+  if (!heartbeat) {
+    panel.innerHTML = '<div class="empty-state">Heartbeat data unavailable</div>';
+    return;
+  }
+  const pulseClass = heartbeat.enabled ? 'active' : 'inactive';
+  const lastBeat = heartbeat.lastBeat ? new Date(heartbeat.lastBeat).toLocaleString() : '—';
+  panel.innerHTML = `
+    <div class="heartbeat-pulse ${pulseClass}"></div>
+    <div class="heartbeat-info">
+      <div class="heartbeat-prop">
+        <div class="heartbeat-prop-label">Status</div>
+        <div class="heartbeat-prop-value">${heartbeat.enabled ? 'Active' : 'Disabled'}</div>
+      </div>
+      <div class="heartbeat-prop">
+        <div class="heartbeat-prop-label">Last Beat</div>
+        <div class="heartbeat-prop-value">${esc(lastBeat)}</div>
+      </div>
+      <div class="heartbeat-prop">
+        <div class="heartbeat-prop-label">Interval</div>
+        <div class="heartbeat-prop-value">${esc(heartbeat.interval || '—')}</div>
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // FEATURES
 // ═══════════════════════════════════════════════════════════════════
 
@@ -880,6 +1113,14 @@ function esc(s) {
 // ═══════════════════════════════════════════════════════════════════
 // BOOT
 // ═══════════════════════════════════════════════════════════════════
+
+// Keyboard support for quick action cards
+document.addEventListener('keydown', (e) => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('quick-action-card')) {
+    e.preventDefault();
+    e.target.click();
+  }
+});
 
 probeConnection();
 refresh();
