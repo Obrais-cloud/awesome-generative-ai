@@ -3,6 +3,7 @@
 const { execFile } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const Cache = require('./cache');
 const { redact } = require('./redactor');
 
@@ -664,6 +665,54 @@ function buildHeartbeat(heartbeatData) {
 }
 
 // ---------------------------------------------------------------------------
+// System resources builder (Node.js os module — no CLI needed)
+// ---------------------------------------------------------------------------
+function buildSystemResources() {
+  const cpus = os.cpus();
+  const totalMem = os.totalmem();
+  const freeMem = os.freemem();
+  const usedMem = totalMem - freeMem;
+  const loadAvg = os.loadavg();
+
+  return {
+    cpu: {
+      cores: cpus.length,
+      model: cpus[0] ? cpus[0].model.trim() : 'Unknown',
+      loadAvg1: Math.round(loadAvg[0] * 100) / 100,
+      loadAvg5: Math.round(loadAvg[1] * 100) / 100,
+      loadAvg15: Math.round(loadAvg[2] * 100) / 100,
+    },
+    memory: {
+      total: totalMem,
+      used: usedMem,
+      free: freeMem,
+      usedPercent: Math.round((usedMem / totalMem) * 100),
+    },
+    uptime: os.uptime(),
+    platform: os.platform(),
+    hostname: os.hostname(),
+    arch: os.arch(),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Cron history builder (last N runs with status tracking)
+// ---------------------------------------------------------------------------
+function buildCronHistory(cronRunsData) {
+  if (!cronRunsData || cronRunsData._error) return [];
+  const runs = Array.isArray(cronRunsData) ? cronRunsData : (cronRunsData.runs || []);
+  return runs.slice(0, 50).map((r) => ({
+    jobId: r.jobId || r.cronId || r.name || '',
+    status: r.status || (r.exitCode === 0 ? 'ok' : 'failed'),
+    exitCode: r.exitCode != null ? r.exitCode : null,
+    startedAt: r.startedAt || r.started_at || r.timestamp || null,
+    finishedAt: r.finishedAt || r.finished_at || null,
+    durationMs: r.durationMs || r.duration_ms || r.duration || null,
+    error: r.error || null,
+  }));
+}
+
+// ---------------------------------------------------------------------------
 // Main collector — runs all CLI calls concurrently, builds summary
 // ---------------------------------------------------------------------------
 async function collectAll() {
@@ -737,6 +786,8 @@ async function collectAll() {
   const nodesInfo = buildNodes(nodesData, nodesPendingData);
   const devices = buildDevices(devicesData);
   const heartbeat = buildHeartbeat(heartbeatData);
+  const systemResources = buildSystemResources();
+  const cronHistory = buildCronHistory(cronRunsData);
   const features = buildFeatures(gateway);
   const health = computeHealth(gateway, cronJobs, channels, pipeline);
 
@@ -791,6 +842,8 @@ async function collectAll() {
     nodes: nodesInfo,
     devices,
     heartbeat,
+    systemResources,
+    cronHistory,
     features,
     health,
   };
@@ -992,6 +1045,13 @@ async function fetchConfig() {
   return redact({ success: true, config });
 }
 
+// ---------------------------------------------------------------------------
+// Fetch system resources (Node.js os, no CLI)
+// ---------------------------------------------------------------------------
+function fetchSystemResources() {
+  return { success: true, ...buildSystemResources() };
+}
+
 module.exports = {
   collectAll,
   executeAction,
@@ -1005,4 +1065,5 @@ module.exports = {
   runSecurityAudit,
   fetchSandboxStatus,
   fetchConfig,
+  fetchSystemResources,
 };

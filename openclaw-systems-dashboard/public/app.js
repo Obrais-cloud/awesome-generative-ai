@@ -14,6 +14,7 @@ let failCount = 0;
 let timerId = null;
 let pendingConfirmAction = null;
 let lastChannelsData = [];
+let rawLogLines = []; // stored for filtering
 
 // ── DOM references ──────────────────────────────────────────────────
 const $ = (id) => document.getElementById(id);
@@ -28,6 +29,8 @@ async function refresh() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     render(data);
+    // Cache for optimistic UI on next page load
+    try { localStorage.setItem('openclaw_cache', JSON.stringify(data)); } catch {}
     failCount = 0;
     currentInterval = POLL_INTERVAL;
     $('stale-indicator').style.display = 'none';
@@ -71,8 +74,10 @@ function render(d) {
   renderHealthReasons(d.health);
 
   // Sections
+  renderSystemResources(d.systemResources);
   renderModels(d.models || []);
   renderCron(d.cronJobs || []);
+  renderCronHistory(d.cronHistory || []);
   renderPipeline(d.pipeline || []);
   renderGatewayDetail(d.gateway);
   renderChannels(d.channels || []);
@@ -216,6 +221,114 @@ function renderGatewayDetail(gw) {
         <div class="gateway-prop-value" style="color:${gw.rpcOk ? '#6ee7b7' : '#fca5a5'}">${gw.rpcOk ? 'OK' : 'N/A'}</div>
       </div>
     </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SYSTEM RESOURCES
+// ═══════════════════════════════════════════════════════════════════
+
+function renderSystemResources(res) {
+  const panel = $('system-resources-panel');
+  if (!res) {
+    panel.innerHTML = '<div class="empty-state">System resource data unavailable</div>';
+    return;
+  }
+
+  const formatBytes = (b) => {
+    if (b >= 1073741824) return (b / 1073741824).toFixed(1) + ' GB';
+    if (b >= 1048576) return (b / 1048576).toFixed(0) + ' MB';
+    return (b / 1024).toFixed(0) + ' KB';
+  };
+
+  const formatUptime = (s) => {
+    const d = Math.floor(s / 86400);
+    const h = Math.floor((s % 86400) / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    if (d > 0) return d + 'd ' + h + 'h';
+    if (h > 0) return h + 'h ' + m + 'm';
+    return m + 'm';
+  };
+
+  const mem = res.memory || {};
+  const cpu = res.cpu || {};
+  const memPct = mem.usedPercent || 0;
+  const memBarClass = memPct > 90 ? 'danger' : memPct > 70 ? 'warn' : 'ok';
+  const loadBarPct = Math.min(100, Math.round((cpu.loadAvg1 / (cpu.cores || 1)) * 100));
+  const loadBarClass = loadBarPct > 90 ? 'danger' : loadBarPct > 70 ? 'warn' : 'ok';
+
+  panel.innerHTML = `
+    <div class="sysres-card">
+      <div class="sysres-card-title">CPU</div>
+      <div class="sysres-stats">
+        <div class="sysres-stat">
+          <div class="sysres-stat-value">${cpu.cores || '—'}</div>
+          <div class="sysres-stat-label">Cores</div>
+        </div>
+        <div class="sysres-stat">
+          <div class="sysres-stat-value">${cpu.loadAvg1 || '—'}</div>
+          <div class="sysres-stat-label">Load (1m)</div>
+        </div>
+        <div class="sysres-stat">
+          <div class="sysres-stat-value">${cpu.loadAvg5 || '—'}</div>
+          <div class="sysres-stat-label">Load (5m)</div>
+        </div>
+      </div>
+      <div class="sysres-bar"><div class="sysres-bar-fill ${loadBarClass}" style="width:${loadBarPct}%"></div></div>
+      <div class="sysres-meta">
+        <div class="sysres-meta-item"><strong>${esc(cpu.model || '—')}</strong></div>
+      </div>
+    </div>
+    <div class="sysres-card">
+      <div class="sysres-card-title">Memory</div>
+      <div class="sysres-stats">
+        <div class="sysres-stat">
+          <div class="sysres-stat-value">${formatBytes(mem.used || 0)}</div>
+          <div class="sysres-stat-label">Used</div>
+        </div>
+        <div class="sysres-stat">
+          <div class="sysres-stat-value">${formatBytes(mem.total || 0)}</div>
+          <div class="sysres-stat-label">Total</div>
+        </div>
+        <div class="sysres-stat">
+          <div class="sysres-stat-value">${memPct}%</div>
+          <div class="sysres-stat-label">Usage</div>
+        </div>
+      </div>
+      <div class="sysres-bar"><div class="sysres-bar-fill ${memBarClass}" style="width:${memPct}%"></div></div>
+      <div class="sysres-meta">
+        <div class="sysres-meta-item"><strong>${esc(res.platform || '—')}</strong> · ${esc(res.arch || '')}</div>
+        <div class="sysres-meta-item">Uptime: <strong>${formatUptime(res.uptime || 0)}</strong></div>
+        <div class="sysres-meta-item">Host: <strong>${esc(res.hostname || '—')}</strong></div>
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// CRON HISTORY
+// ═══════════════════════════════════════════════════════════════════
+
+function renderCronHistory(history) {
+  const section = $('cron-history');
+  const list = $('cron-history-list');
+  if (!history || !history.length) {
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = '';
+  list.innerHTML = history.slice(0, 20).map((r) => {
+    const icon = r.status === 'ok' ? '✅' : '❌';
+    const statusClass = r.status === 'ok' ? 'ok' : 'failed';
+    const time = r.finishedAt ? new Date(r.finishedAt).toLocaleString() : (r.startedAt ? new Date(r.startedAt).toLocaleString() : '');
+    const duration = r.durationMs ? (r.durationMs / 1000).toFixed(1) + 's' : '';
+    return `
+      <div class="cron-history-item">
+        <div class="cron-history-icon">${icon}</div>
+        <div class="cron-history-job">${esc(r.jobId)}</div>
+        <div class="cron-history-status ${statusClass}">${esc(r.status)}</div>
+        ${duration ? `<div class="cron-history-duration">${esc(duration)}</div>` : ''}
+        <div class="cron-history-time">${esc(time)}</div>
+      </div>`;
+  }).join('');
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1052,19 +1165,23 @@ async function fetchDeepStatus() {
 
 async function fetchLogs() {
   const con = $('output-console');
+  const filterBar = $('log-filter-bar');
   con.innerHTML = '<div class="output-line heading">Fetching logs…</div>';
   try {
     const res = await fetch('/api/logs');
     const d = await res.json();
     if (!d.success) {
       con.innerHTML += `<div class="output-line error">Error: ${esc(d.error)}</div>`;
+      if (filterBar) filterBar.style.display = 'none';
       return;
     }
     const lines = d.lines || [];
     if (!lines.length) {
       con.innerHTML = '<div class="output-line warn">No log output returned.</div>';
+      if (filterBar) filterBar.style.display = 'none';
       return;
     }
+    rawLogLines = lines;
     con.innerHTML = '<div class="output-line heading">Recent Logs (' + lines.length + ' lines)</div>' +
       lines.map((l) => {
         let cls = '';
@@ -1073,6 +1190,12 @@ async function fetchLogs() {
         return `<div class="output-line ${cls}">${esc(l)}</div>`;
       }).join('');
     con.scrollTop = con.scrollHeight;
+    // Show filter bar
+    if (filterBar) {
+      filterBar.style.display = 'flex';
+      if ($('log-search')) $('log-search').value = '';
+      filterLogs();
+    }
   } catch (err) {
     con.innerHTML += `<div class="output-line error">Fetch error: ${esc(err.message)}</div>`;
   }
@@ -1080,6 +1203,9 @@ async function fetchLogs() {
 
 function clearOutput() {
   $('output-console').innerHTML = '<div class="output-placeholder">Run diagnostics or fetch logs to see output here.</div>';
+  const filterBar = $('log-filter-bar');
+  if (filterBar) filterBar.style.display = 'none';
+  rawLogLines = [];
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1111,6 +1237,91 @@ function esc(s) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// THEME TOGGLE
+// ═══════════════════════════════════════════════════════════════════
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('openclaw_theme', next); } catch {}
+  $('theme-toggle').textContent = next === 'light' ? '☀️' : '🌙';
+}
+
+function restoreTheme() {
+  try {
+    const saved = localStorage.getItem('openclaw_theme');
+    if (saved === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+      $('theme-toggle').textContent = '☀️';
+    }
+  } catch {}
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// COLLAPSIBLE SECTIONS
+// ═══════════════════════════════════════════════════════════════════
+
+function toggleSection(titleEl) {
+  const section = titleEl.closest('.section');
+  if (!section) return;
+  const key = section.getAttribute('data-section');
+  const collapsed = section.classList.toggle('collapsed');
+  if (key) {
+    try {
+      const state = JSON.parse(localStorage.getItem('openclaw_collapsed') || '{}');
+      state[key] = collapsed;
+      localStorage.setItem('openclaw_collapsed', JSON.stringify(state));
+    } catch {}
+  }
+}
+
+function restoreCollapsedSections() {
+  try {
+    const state = JSON.parse(localStorage.getItem('openclaw_collapsed') || '{}');
+    for (const [key, collapsed] of Object.entries(state)) {
+      if (collapsed) {
+        const el = document.querySelector(`[data-section="${key}"]`);
+        if (el) el.classList.add('collapsed');
+      }
+    }
+  } catch {}
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// LOG FILTERING
+// ═══════════════════════════════════════════════════════════════════
+
+function filterLogs() {
+  const search = ($('log-search') ? $('log-search').value : '').toLowerCase();
+  const checkboxes = document.querySelectorAll('.log-level-checkbox input');
+  const levels = {};
+  checkboxes.forEach((cb) => { levels[cb.getAttribute('data-level')] = cb.checked; });
+
+  const lines = document.querySelectorAll('#output-console .output-line:not(.heading)');
+  let visible = 0;
+  lines.forEach((line) => {
+    const text = line.textContent.toLowerCase();
+    const isError = line.classList.contains('error');
+    const isWarn = line.classList.contains('warn');
+    const isInfo = !isError && !isWarn;
+
+    let levelOk = true;
+    if (isError && !levels.error) levelOk = false;
+    if (isWarn && !levels.warn) levelOk = false;
+    if (isInfo && !levels.info) levelOk = false;
+
+    const searchOk = !search || text.includes(search);
+    const show = levelOk && searchOk;
+    line.classList.toggle('filtered-out', !show);
+    if (show) visible++;
+  });
+
+  const countEl = $('log-count');
+  if (countEl) countEl.textContent = visible + '/' + lines.length;
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // BOOT
 // ═══════════════════════════════════════════════════════════════════
 
@@ -1121,6 +1332,19 @@ document.addEventListener('keydown', (e) => {
     e.target.click();
   }
 });
+
+// Restore persisted state
+restoreTheme();
+restoreCollapsedSections();
+
+// Optimistic UI: show cached data immediately
+try {
+  const cached = localStorage.getItem('openclaw_cache');
+  if (cached) {
+    const data = JSON.parse(cached);
+    render(data);
+  }
+} catch {}
 
 probeConnection();
 refresh();

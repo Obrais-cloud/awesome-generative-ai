@@ -15,6 +15,7 @@ const {
   runSecurityAudit,
   fetchSandboxStatus,
   fetchConfig,
+  fetchSystemResources,
 } = require('./collector');
 
 const PORT = parseInt(process.env.DASHBOARD_PORT, 10) || 8789;
@@ -141,6 +142,16 @@ app.post('/api/security/audit', async (_req, res) => {
 app.get('/api/sandbox', async (_req, res) => {
   try {
     const result = await fetchSandboxStatus();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── System resources ────────────────────────────────────────────────
+app.get('/api/system/resources', (_req, res) => {
+  try {
+    const result = fetchSystemResources();
     res.json(result);
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

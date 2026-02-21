@@ -19,6 +19,9 @@
           <span id="agent-name">[AGENT_NAME]</span> — Personal AI Agent — Full Configuration Overview
         </p>
       </div>
+      <div class="header-controls">
+        <button class="btn btn-sm btn-ghost theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark theme">🌙</button>
+      </div>
       <div class="header-status">
         <span class="health-dot" id="health-dot"></span>
         <span class="health-label" id="health-label">Checking…</span>
@@ -122,54 +125,80 @@
       <!-- Populated by JS when health is degraded/down -->
     </div>
 
+    <!-- System Resources -->
+    <div class="section" data-section="system-resources">
+      <div class="section-title collapsible-title" onclick="toggleSection(this)">💻 System Resources <span class="collapse-icon">▾</span> <span class="help-tip" data-tip="Host CPU, memory, and platform info from the server process">?</span></div>
+      <div class="section-content" id="system-resources-content">
+        <div class="system-resources-panel" id="system-resources-panel">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
     <!-- AI Model Stack -->
-    <div class="section">
-      <div class="section-title">🧠 AI Model Stack <span class="help-tip" data-tip="Your configured AI models with automatic failover">?</span></div>
-      <div class="model-grid" id="model-grid">
-        <!-- Populated by JS -->
+    <div class="section" data-section="model-stack">
+      <div class="section-title collapsible-title" onclick="toggleSection(this)">🧠 AI Model Stack <span class="collapse-icon">▾</span> <span class="help-tip" data-tip="Your configured AI models with automatic failover">?</span></div>
+      <div class="section-content">
+        <div class="model-grid" id="model-grid">
+          <!-- Populated by JS -->
+        </div>
       </div>
     </div>
 
     <!-- Automated Cron Jobs -->
-    <div class="section">
-      <div class="section-title">⏱ Automated Cron Jobs</div>
-      <div class="cron-list" id="cron-list">
-        <!-- Populated by JS -->
+    <div class="section" data-section="cron-jobs">
+      <div class="section-title collapsible-title" onclick="toggleSection(this)">⏱ Automated Cron Jobs <span class="collapse-icon">▾</span></div>
+      <div class="section-content">
+        <div class="cron-list" id="cron-list">
+          <!-- Populated by JS -->
+        </div>
+        <div class="cron-history" id="cron-history" style="display:none;">
+          <div class="subsection-title">Recent Run History</div>
+          <div class="cron-history-list" id="cron-history-list"></div>
+        </div>
       </div>
     </div>
 
     <!-- Real-Time Gmail Pipeline -->
-    <div class="section">
-      <div class="section-title">📧 Real-Time Gmail Pipeline <span class="help-tip" data-tip="Email processing flow from Gmail through to your channels">?</span></div>
-      <div class="pipeline" id="pipeline">
-        <!-- Populated by JS -->
+    <div class="section" data-section="pipeline">
+      <div class="section-title collapsible-title" onclick="toggleSection(this)">📧 Real-Time Gmail Pipeline <span class="collapse-icon">▾</span> <span class="help-tip" data-tip="Email processing flow from Gmail through to your channels">?</span></div>
+      <div class="section-content">
+        <div class="pipeline" id="pipeline">
+          <!-- Populated by JS -->
+        </div>
       </div>
     </div>
 
     <!-- Gateway Detail -->
-    <div class="section">
-      <div class="section-title">🌐 Gateway</div>
-      <div class="gateway-detail" id="gateway-detail">
-        <!-- Populated by JS -->
+    <div class="section" data-section="gateway">
+      <div class="section-title collapsible-title" onclick="toggleSection(this)">🌐 Gateway <span class="collapse-icon">▾</span></div>
+      <div class="section-content">
+        <div class="gateway-detail" id="gateway-detail">
+          <!-- Populated by JS -->
+        </div>
       </div>
     </div>
 
     <!-- Communication Channels -->
-    <div class="section">
-      <div class="section-title">💬 Communication Channels</div>
-      <div class="channel-row" id="channel-row">
-        <!-- Populated by JS -->
+    <div class="section" data-section="channels">
+      <div class="section-title collapsible-title" onclick="toggleSection(this)">💬 Communication Channels <span class="collapse-icon">▾</span></div>
+      <div class="section-content">
+        <div class="channel-row" id="channel-row">
+          <!-- Populated by JS -->
+        </div>
       </div>
     </div>
 
     <!-- Installed Skills -->
-    <div class="section">
-      <div class="section-title">🧩 Installed Skills</div>
-      <div class="skills-controls">
-        <button class="btn btn-action" onclick="confirmAction('skillUpdate', 'Update all installed skills?')">⬆ Update All Skills</button>
-      </div>
-      <div class="skills-list" id="skills-list">
-        <!-- Populated by JS -->
+    <div class="section" data-section="skills">
+      <div class="section-title collapsible-title" onclick="toggleSection(this)">🧩 Installed Skills <span class="collapse-icon">▾</span></div>
+      <div class="section-content">
+        <div class="skills-controls">
+          <button class="btn btn-action" onclick="confirmAction('skillUpdate', 'Update all installed skills?')">⬆ Update All Skills</button>
+        </div>
+        <div class="skills-list" id="skills-list">
+          <!-- Populated by JS -->
+        </div>
       </div>
     </div>
 
@@ -182,111 +211,133 @@
     </div>
 
     <!-- Model Management -->
-    <div class="section">
-      <div class="section-title">⚙ Model Management <span class="help-tip" data-tip="Set primary model, manage fallback chain, and probe endpoints">?</span></div>
-      <div class="model-mgmt-controls">
-        <button class="btn btn-action" onclick="fetchModelDetails()">🔄 Refresh Models</button>
-        <button class="btn btn-action" onclick="probeModels()">📡 Probe All Models</button>
-      </div>
-      <div class="model-mgmt-grid" id="model-mgmt-grid">
-        <!-- Populated by JS -->
-      </div>
-      <div class="model-fallbacks" id="model-fallbacks" style="display:none;">
-        <div class="subsection-title">Fallback Chain</div>
-        <div class="fallback-list" id="fallback-list"></div>
+    <div class="section" data-section="model-mgmt">
+      <div class="section-title collapsible-title" onclick="toggleSection(this)">⚙ Model Management <span class="collapse-icon">▾</span> <span class="help-tip" data-tip="Set primary model, manage fallback chain, and probe endpoints">?</span></div>
+      <div class="section-content">
+        <div class="model-mgmt-controls">
+          <button class="btn btn-action" onclick="fetchModelDetails()">🔄 Refresh Models</button>
+          <button class="btn btn-action" onclick="probeModels()">📡 Probe All Models</button>
+        </div>
+        <div class="model-mgmt-grid" id="model-mgmt-grid">
+          <!-- Populated by JS -->
+        </div>
+        <div class="model-fallbacks" id="model-fallbacks" style="display:none;">
+          <div class="subsection-title">Fallback Chain</div>
+          <div class="fallback-list" id="fallback-list"></div>
+        </div>
       </div>
     </div>
 
     <!-- Security Audit -->
-    <div class="section">
-      <div class="section-title">🛡 Security Audit <span class="help-tip" data-tip="Scan for vulnerabilities and auto-fix security issues">?</span></div>
-      <div class="security-controls">
-        <button class="btn btn-action" onclick="runSecurityAudit()">🔍 Run Audit</button>
-        <button class="btn btn-action btn-warn" onclick="confirmAction('securityAuditFix', 'Run deep security audit with auto-fix? This will attempt to resolve detected issues.')">🔧 Deep Audit + Fix</button>
-      </div>
-      <div class="security-summary" id="security-summary" style="display:none;">
-        <!-- Populated by JS -->
-      </div>
-      <div class="security-checks" id="security-checks">
-        <!-- Populated by JS -->
+    <div class="section" data-section="security">
+      <div class="section-title collapsible-title" onclick="toggleSection(this)">🛡 Security Audit <span class="collapse-icon">▾</span> <span class="help-tip" data-tip="Scan for vulnerabilities and auto-fix security issues">?</span></div>
+      <div class="section-content">
+        <div class="security-controls">
+          <button class="btn btn-action" onclick="runSecurityAudit()">🔍 Run Audit</button>
+          <button class="btn btn-action btn-warn" onclick="confirmAction('securityAuditFix', 'Run deep security audit with auto-fix? This will attempt to resolve detected issues.')">🔧 Deep Audit + Fix</button>
+        </div>
+        <div class="security-summary" id="security-summary" style="display:none;">
+          <!-- Populated by JS -->
+        </div>
+        <div class="security-checks" id="security-checks">
+          <!-- Populated by JS -->
+        </div>
       </div>
     </div>
 
     <!-- Sandbox Configuration -->
-    <div class="section">
-      <div class="section-title">📦 Sandbox <span class="help-tip" data-tip="Sandbox isolates commands in a safe environment">?</span></div>
-      <div class="sandbox-panel" id="sandbox-panel">
-        <!-- Populated by JS -->
+    <div class="section" data-section="sandbox">
+      <div class="section-title collapsible-title" onclick="toggleSection(this)">📦 Sandbox <span class="collapse-icon">▾</span> <span class="help-tip" data-tip="Sandbox isolates commands in a safe environment">?</span></div>
+      <div class="section-content">
+        <div class="sandbox-panel" id="sandbox-panel">
+          <!-- Populated by JS -->
+        </div>
       </div>
     </div>
 
     <!-- Browser Status -->
-    <div class="section">
-      <div class="section-title">🌍 Browser Automation</div>
-      <div class="browser-panel" id="browser-panel">
-        <!-- Populated by JS -->
+    <div class="section" data-section="browser">
+      <div class="section-title collapsible-title" onclick="toggleSection(this)">🌍 Browser Automation <span class="collapse-icon">▾</span></div>
+      <div class="section-content">
+        <div class="browser-panel" id="browser-panel">
+          <!-- Populated by JS -->
+        </div>
       </div>
     </div>
 
     <!-- Configuration -->
-    <div class="section">
-      <div class="section-title">📋 Configuration</div>
-      <div class="config-controls">
-        <button class="btn btn-action" onclick="fetchConfigDetails()">🔄 Refresh Config</button>
-      </div>
-      <div class="config-grid" id="config-grid">
-        <!-- Populated by JS -->
+    <div class="section" data-section="config">
+      <div class="section-title collapsible-title" onclick="toggleSection(this)">📋 Configuration <span class="collapse-icon">▾</span></div>
+      <div class="section-content">
+        <div class="config-controls">
+          <button class="btn btn-action" onclick="fetchConfigDetails()">🔄 Refresh Config</button>
+        </div>
+        <div class="config-grid" id="config-grid">
+          <!-- Populated by JS -->
+        </div>
       </div>
     </div>
 
     <!-- Token Usage -->
-    <div class="section">
-      <div class="section-title">💰 Token Usage & Cost <span class="help-tip" data-tip="API token consumption and cost tracking across providers">?</span></div>
-      <div class="token-usage-panel" id="token-usage-panel">
-        <!-- Populated by JS -->
+    <div class="section" data-section="token-usage">
+      <div class="section-title collapsible-title" onclick="toggleSection(this)">💰 Token Usage & Cost <span class="collapse-icon">▾</span> <span class="help-tip" data-tip="API token consumption and cost tracking across providers">?</span></div>
+      <div class="section-content">
+        <div class="token-usage-panel" id="token-usage-panel">
+          <!-- Populated by JS -->
+        </div>
       </div>
     </div>
 
     <!-- Memory System -->
-    <div class="section">
-      <div class="section-title">🧠 Memory <span class="help-tip" data-tip="Persistent memory index for semantic search across conversations">?</span></div>
-      <div class="memory-controls">
-        <button class="btn btn-action" onclick="confirmAction('memoryIndex', 'Rebuild the memory index? This may take a moment.')">🔄 Reindex</button>
-      </div>
-      <div class="memory-panel" id="memory-panel">
-        <!-- Populated by JS -->
+    <div class="section" data-section="memory">
+      <div class="section-title collapsible-title" onclick="toggleSection(this)">🧠 Memory <span class="collapse-icon">▾</span> <span class="help-tip" data-tip="Persistent memory index for semantic search across conversations">?</span></div>
+      <div class="section-content">
+        <div class="memory-controls">
+          <button class="btn btn-action" onclick="confirmAction('memoryIndex', 'Rebuild the memory index? This may take a moment.')">🔄 Reindex</button>
+        </div>
+        <div class="memory-panel" id="memory-panel">
+          <!-- Populated by JS -->
+        </div>
       </div>
     </div>
 
     <!-- Active Sessions -->
-    <div class="section">
-      <div class="section-title">💬 Active Sessions <span class="help-tip" data-tip="Recent conversation sessions across channels">?</span></div>
-      <div class="sessions-list" id="sessions-list">
-        <!-- Populated by JS -->
+    <div class="section" data-section="sessions">
+      <div class="section-title collapsible-title" onclick="toggleSection(this)">💬 Active Sessions <span class="collapse-icon">▾</span> <span class="help-tip" data-tip="Recent conversation sessions across channels">?</span></div>
+      <div class="section-content">
+        <div class="sessions-list" id="sessions-list">
+          <!-- Populated by JS -->
+        </div>
       </div>
     </div>
 
     <!-- Nodes & Devices -->
-    <div class="section">
-      <div class="section-title">🖥 Nodes & Devices <span class="help-tip" data-tip="Connected devices and remote nodes running OpenClaw">?</span></div>
-      <div class="nodes-panel" id="nodes-panel">
-        <!-- Populated by JS -->
+    <div class="section" data-section="nodes-devices">
+      <div class="section-title collapsible-title" onclick="toggleSection(this)">🖥 Nodes & Devices <span class="collapse-icon">▾</span> <span class="help-tip" data-tip="Connected devices and remote nodes running OpenClaw">?</span></div>
+      <div class="section-content">
+        <div class="nodes-panel" id="nodes-panel">
+          <!-- Populated by JS -->
+        </div>
       </div>
     </div>
 
     <!-- Heartbeat -->
-    <div class="section">
-      <div class="section-title">💓 System Heartbeat</div>
-      <div class="heartbeat-panel" id="heartbeat-panel">
-        <!-- Populated by JS -->
+    <div class="section" data-section="heartbeat">
+      <div class="section-title collapsible-title" onclick="toggleSection(this)">💓 System Heartbeat <span class="collapse-icon">▾</span></div>
+      <div class="section-content">
+        <div class="heartbeat-panel" id="heartbeat-panel">
+          <!-- Populated by JS -->
+        </div>
       </div>
     </div>
 
     <!-- Key Features -->
-    <div class="section">
-      <div class="section-title">⚡ Key Features</div>
-      <div class="features-grid" id="features-grid">
-        <!-- Populated by JS -->
+    <div class="section" data-section="features">
+      <div class="section-title collapsible-title" onclick="toggleSection(this)">⚡ Key Features <span class="collapse-icon">▾</span></div>
+      <div class="section-content">
+        <div class="features-grid" id="features-grid">
+          <!-- Populated by JS -->
+        </div>
       </div>
     </div>
 
@@ -422,6 +473,15 @@
           <button class="btn btn-action" onclick="fetchDeepStatus()">📊 Deep Status</button>
           <button class="btn btn-action" onclick="fetchLogs()">📋 Logs</button>
           <button class="btn btn-sm btn-ghost" onclick="clearOutput()">Clear</button>
+        </div>
+        <div class="log-filter-bar" id="log-filter-bar" style="display:none;">
+          <input type="text" id="log-search" class="log-search-input" placeholder="Filter logs…" oninput="filterLogs()">
+          <div class="log-level-filters">
+            <label class="log-level-checkbox"><input type="checkbox" checked onchange="filterLogs()" data-level="error"> <span class="log-level-dot error"></span> Error</label>
+            <label class="log-level-checkbox"><input type="checkbox" checked onchange="filterLogs()" data-level="warn"> <span class="log-level-dot warn"></span> Warn</label>
+            <label class="log-level-checkbox"><input type="checkbox" checked onchange="filterLogs()" data-level="info"> <span class="log-level-dot info"></span> Info</label>
+          </div>
+          <span class="log-count" id="log-count"></span>
         </div>
         <div class="output-console" id="output-console">
           <div class="output-placeholder">Run diagnostics or fetch logs to see output here.</div>
