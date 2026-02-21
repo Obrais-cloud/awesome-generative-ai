@@ -64,16 +64,25 @@ function render(d) {
   $('stat-channels').textContent = d.stats?.channelsCount ?? '—';
   $('stat-skills').textContent   = d.stats?.skillsCount   ?? '—';
 
+  // Secondary stats
+  renderSecondaryStats(d);
+
+  // Health reasons
+  renderHealthReasons(d.health);
+
   // Sections
   renderModels(d.models || []);
   renderCron(d.cronJobs || []);
   renderPipeline(d.pipeline || []);
+  renderGatewayDetail(d.gateway);
   renderChannels(d.channels || []);
   renderSkills(d.skills || []);
   renderPairings(d.pendingPairings || []);
   renderModelManagement(d.modelManagement || {});
   renderSecuritySummary(d.securityAudit);
   renderSandbox(d.sandbox);
+  renderBrowser(d.browser);
+  renderConfig(d.config);
   renderFeatures(d.features || []);
 
   // Keep channel data for control panel
@@ -85,6 +94,89 @@ function render(d) {
     const t = new Date(d.generatedAt);
     $('last-updated').textContent = t.toLocaleTimeString();
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SECONDARY STATS, HEALTH REASONS, GATEWAY DETAIL
+// ═══════════════════════════════════════════════════════════════════
+
+function renderSecondaryStats(d) {
+  // Gateway
+  const gw = d.gateway || {};
+  $('stat-gateway').textContent = gw.running ? 'Running' : 'Down';
+  $('stat-gateway').style.color = gw.running ? '#6ee7b7' : '#fca5a5';
+
+  // Security
+  const sec = d.securityAudit;
+  if (sec && sec.total) {
+    $('stat-security').textContent = sec.critical ? sec.critical + ' Issues' : 'OK';
+    $('stat-security').style.color = sec.critical ? '#fca5a5' : '#6ee7b7';
+  } else {
+    $('stat-security').textContent = '—';
+    $('stat-security').style.color = '';
+  }
+
+  // Sandbox
+  const sb = d.sandbox;
+  if (sb) {
+    $('stat-sandbox').textContent = sb.enabled ? 'On' : 'Off';
+    $('stat-sandbox').style.color = sb.enabled ? '#6ee7b7' : '#fcd34d';
+  } else {
+    $('stat-sandbox').textContent = '—';
+    $('stat-sandbox').style.color = '';
+  }
+
+  // Browser
+  const br = d.browser;
+  if (br) {
+    $('stat-browser').textContent = br.running ? 'Active' : 'Off';
+    $('stat-browser').style.color = br.running ? '#6ee7b7' : '#9ca3af';
+  } else {
+    $('stat-browser').textContent = '—';
+    $('stat-browser').style.color = '';
+  }
+}
+
+function renderHealthReasons(health) {
+  const el = $('health-reasons');
+  if (!health || !health.reasons || !health.reasons.length || health.state === 'ok') {
+    el.style.display = 'none';
+    return;
+  }
+  el.style.display = 'flex';
+  const chipClass = health.state === 'down' ? 'down' : 'warn';
+  el.innerHTML = health.reasons.map((r) =>
+    `<span class="health-reason-chip ${chipClass}">⚠ ${esc(r)}</span>`
+  ).join('');
+}
+
+function renderGatewayDetail(gw) {
+  const el = $('gateway-detail');
+  if (!gw) {
+    el.innerHTML = '<div class="empty-state">Gateway data unavailable</div>';
+    return;
+  }
+  const dotClass = gw.running ? 'ok' : 'down';
+  el.innerHTML = `
+    <div class="gateway-status-dot ${dotClass}"></div>
+    <div class="gateway-info">
+      <div class="gateway-prop">
+        <div class="gateway-prop-label">Status</div>
+        <div class="gateway-prop-value">${gw.running ? 'Running' : 'Stopped'}</div>
+      </div>
+      <div class="gateway-prop">
+        <div class="gateway-prop-label">Bind</div>
+        <div class="gateway-prop-value">${esc(gw.bind || '—')}</div>
+      </div>
+      <div class="gateway-prop">
+        <div class="gateway-prop-label">Port</div>
+        <div class="gateway-prop-value">${gw.port || '—'}</div>
+      </div>
+      <div class="gateway-prop">
+        <div class="gateway-prop-label">RPC</div>
+        <div class="gateway-prop-value" style="color:${gw.rpcOk ? '#6ee7b7' : '#fca5a5'}">${gw.rpcOk ? 'OK' : 'N/A'}</div>
+      </div>
+    </div>`;
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -504,6 +596,67 @@ function renderSandbox(sandbox) {
         <div class="sandbox-prop-value">${esc(sandbox.fileSystemAccess || '—')}</div>
       </div>
     </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// BROWSER STATUS
+// ═══════════════════════════════════════════════════════════════════
+
+function renderBrowser(browser) {
+  const panel = $('browser-panel');
+  if (!browser) {
+    panel.innerHTML = '<div class="empty-state">Browser automation not detected</div>';
+    return;
+  }
+  const dotClass = browser.running ? 'running' : 'stopped';
+  const statusText = browser.running ? 'Running' : 'Stopped';
+  const detailParts = [];
+  if (browser.headless) detailParts.push('Headless');
+  if (browser.port) detailParts.push('Port ' + browser.port);
+
+  panel.innerHTML = `
+    <div class="browser-status-dot ${dotClass}"></div>
+    <div class="browser-info">
+      <div class="browser-label">Browser Engine: ${statusText}</div>
+      <div class="browser-detail">${detailParts.length ? esc(detailParts.join(' · ')) : 'No additional details'}</div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// CONFIGURATION
+// ═══════════════════════════════════════════════════════════════════
+
+function renderConfig(config) {
+  const grid = $('config-grid');
+  if (!config || !Object.keys(config).length) {
+    grid.innerHTML = '<div class="empty-state">No configuration data — click Refresh Config</div>';
+    return;
+  }
+  grid.innerHTML = Object.entries(config).map(([key, val]) => {
+    const displayKey = key.replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2');
+    const displayVal = typeof val === 'object' ? JSON.stringify(val) : String(val);
+    return `
+      <div class="config-item">
+        <div class="config-key">${esc(displayKey)}</div>
+        <div class="config-value">${esc(displayVal)}</div>
+      </div>`;
+  }).join('');
+}
+
+async function fetchConfigDetails() {
+  showToast('Fetching configuration…', 'info');
+  try {
+    const res = await fetch('/api/config');
+    const d = await res.json();
+    if (d.success) {
+      renderConfig(d.config);
+      showToast('Configuration refreshed', 'success');
+    } else {
+      showToast('Config fetch failed: ' + (d.error || 'unknown'), 'error');
+    }
+  } catch (err) {
+    showToast('Config error: ' + err.message, 'error');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════

@@ -14,6 +14,7 @@ const {
   fetchModelManagement,
   runSecurityAudit,
   fetchSandboxStatus,
+  fetchConfig,
 } = require('./collector');
 
 const PORT = parseInt(process.env.DASHBOARD_PORT, 10) || 8789;
@@ -140,6 +141,16 @@ app.post('/api/security/audit', async (_req, res) => {
 app.get('/api/sandbox', async (_req, res) => {
   try {
     const result = await fetchSandboxStatus();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── Config (safe keys only) ──────────────────────────────────────────────
+app.get('/api/config', async (_req, res) => {
+  try {
+    const result = await fetchConfig();
     res.json(result);
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

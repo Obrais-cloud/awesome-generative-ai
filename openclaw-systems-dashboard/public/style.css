@@ -1180,6 +1180,284 @@ body {
   font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
 }
 
+/* ── Secondary Stats Row ─────────────────────────────────────────── */
+.secondary-stats {
+  margin-top: -18px;
+}
+
+.stat-mini {
+  padding: 12px 16px;
+}
+.stat-mini .stat-icon {
+  font-size: 18px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+.stat-mini .stat-value {
+  font-size: 16px;
+}
+.stat-mini .stat-label {
+  font-size: 10px;
+}
+
+/* ── Health Reasons ──────────────────────────────────────────────── */
+.health-reasons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.health-reason-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.health-reason-chip.warn {
+  background: rgba(251, 191, 36, 0.1);
+  color: #fcd34d;
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+.health-reason-chip.down {
+  background: rgba(248, 113, 113, 0.1);
+  color: #fca5a5;
+  border: 1px solid rgba(248, 113, 113, 0.2);
+}
+
+/* ── Gateway Detail ──────────────────────────────────────────────── */
+.gateway-detail {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 18px 22px;
+}
+
+.gateway-status-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.gateway-status-dot.ok {
+  background: #34d399;
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
+}
+.gateway-status-dot.down {
+  background: #f87171;
+  box-shadow: 0 0 8px rgba(248, 113, 113, 0.5);
+}
+
+.gateway-info {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.gateway-prop {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gateway-prop-label {
+  font-size: 10px;
+  color: #6868a0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.gateway-prop-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #c4c4d8;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+/* ── Browser Panel ───────────────────────────────────────────────── */
+.browser-panel {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 16px 22px;
+}
+
+.browser-status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.browser-status-dot.running {
+  background: #34d399;
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
+}
+.browser-status-dot.stopped {
+  background: #555;
+}
+
+.browser-info {
+  flex: 1;
+}
+
+.browser-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e2e2f0;
+}
+
+.browser-detail {
+  font-size: 11px;
+  color: #6868a0;
+  margin-top: 2px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+/* ── Config Grid ─────────────────────────────────────────────────── */
+.config-controls {
+  margin-bottom: 12px;
+}
+
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.config-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+}
+
+.config-key {
+  font-size: 10px;
+  color: #6868a0;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.config-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: #c4c4d8;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  word-break: break-all;
+}
+
+/* ── Quick Start / Guided Actions ────────────────────────────────── */
+.quick-start {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.06) 0%, rgba(168, 85, 247, 0.04) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 14px;
+  padding: 20px 24px;
+}
+
+.quick-start-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #a5b4fc;
+  margin-bottom: 6px;
+}
+
+.quick-start-desc {
+  font-size: 12px;
+  color: #7878a0;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.quick-start-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.quick-action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  text-align: center;
+}
+.quick-action-card:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.quick-action-icon {
+  font-size: 24px;
+}
+
+.quick-action-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #c4c4d8;
+}
+
+.quick-action-hint {
+  font-size: 10px;
+  color: #5858880;
+  line-height: 1.4;
+}
+
+/* ── Help Tooltips ───────────────────────────────────────────────── */
+.section-title .help-tip {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #6868a0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  margin-left: 8px;
+  cursor: help;
+  vertical-align: middle;
+  position: relative;
+}
+
+.section-title .help-tip:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 24px;
+  top: -6px;
+  background: #1a1a24;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 400;
+  color: #a0a0c0;
+  white-space: nowrap;
+  z-index: 100;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
 /* ── Scrollbar ───────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }

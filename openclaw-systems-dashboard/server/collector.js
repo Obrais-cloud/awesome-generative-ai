@@ -478,6 +478,48 @@ function buildSandboxStatus(sandboxData) {
 }
 
 // ---------------------------------------------------------------------------
+// Browser status builder
+// ---------------------------------------------------------------------------
+function buildBrowserStatus(browserData) {
+  if (!browserData || browserData._error) return null;
+  const text = browserData._raw || JSON.stringify(browserData);
+  const running = /running|active|open/i.test(text);
+  const headless = /headless/i.test(text);
+  const portMatch = text.match(/port[:\s]+(\d+)/i);
+
+  return {
+    running,
+    headless,
+    port: portMatch ? parseInt(portMatch[1], 10) : null,
+    _raw: text,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Config builder (redact secrets, expose safe config keys)
+// ---------------------------------------------------------------------------
+function buildConfig(configData) {
+  if (!configData || configData._error) return null;
+
+  // Only expose non-sensitive top-level keys
+  const safe = {};
+  const SAFE_KEYS = [
+    'agent_name', 'agentName', 'version', 'environment', 'env',
+    'locale', 'timezone', 'log_level', 'logLevel', 'data_dir', 'dataDir',
+    'gateway_port', 'gatewayPort', 'auto_start', 'autoStart',
+    'sandbox_mode', 'sandboxMode', 'plugins', 'skills_dir', 'skillsDir',
+    'cron_dir', 'cronDir', 'identity', 'theme', 'language',
+  ];
+  for (const key of SAFE_KEYS) {
+    if (configData[key] !== undefined) {
+      safe[key] = configData[key];
+    }
+  }
+
+  return safe;
+}
+
+// ---------------------------------------------------------------------------
 // Main collector — runs all CLI calls concurrently, builds summary
 // ---------------------------------------------------------------------------
 async function collectAll() {
@@ -497,6 +539,8 @@ async function collectAll() {
     probeData,
     securityData,
     sandboxData,
+    browserData,
+    configData,
   ] = await Promise.all([
     runCommand('status'),
     runCommand('cronList'),
@@ -513,6 +557,8 @@ async function collectAll() {
     runCommand('modelsStatus'),
     runCommand('securityAudit'),
     runCommand('sandboxStatus'),
+    runCommand('browserStat'),
+    runCommand('configShow'),
   ]);
 
   const gateway = parseGatewayStatus(gatewayData);
@@ -525,6 +571,8 @@ async function collectAll() {
   const modelManagement = buildModelManagement(modelsData, fallbacksData, probeData);
   const securityAudit = buildSecurityAudit(securityData);
   const sandbox = buildSandboxStatus(sandboxData);
+  const browser = buildBrowserStatus(browserData);
+  const config = buildConfig(configData);
   const features = buildFeatures(gateway);
   const health = computeHealth(gateway, cronJobs, channels, pipeline);
 
@@ -571,6 +619,8 @@ async function collectAll() {
     modelManagement,
     securityAudit,
     sandbox,
+    browser,
+    config,
     features,
     health,
   };
@@ -760,6 +810,18 @@ async function fetchSandboxStatus() {
   return { success: true, ...buildSandboxStatus(data) };
 }
 
+// ---------------------------------------------------------------------------
+// Fetch config (safe keys only)
+// ---------------------------------------------------------------------------
+async function fetchConfig() {
+  const data = await runCommand('configShow');
+  if (data && data._error) {
+    return { success: false, error: data.message };
+  }
+  const config = buildConfig(data);
+  return redact({ success: true, config });
+}
+
 module.exports = {
   collectAll,
   executeAction,
@@ -772,4 +834,5 @@ module.exports = {
   fetchModelManagement,
   runSecurityAudit,
   fetchSandboxStatus,
+  fetchConfig,
 };

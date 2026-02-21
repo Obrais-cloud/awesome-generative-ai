@@ -56,9 +56,46 @@
       </div>
     </div>
 
+    <!-- Secondary Stats Row -->
+    <div class="stats-row secondary-stats">
+      <div class="stat-tile stat-mini">
+        <div class="stat-icon">🌐</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-gateway">—</div>
+          <div class="stat-label">Gateway</div>
+        </div>
+      </div>
+      <div class="stat-tile stat-mini">
+        <div class="stat-icon">🛡</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-security">—</div>
+          <div class="stat-label">Security</div>
+        </div>
+      </div>
+      <div class="stat-tile stat-mini">
+        <div class="stat-icon">📦</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-sandbox">—</div>
+          <div class="stat-label">Sandbox</div>
+        </div>
+      </div>
+      <div class="stat-tile stat-mini">
+        <div class="stat-icon">🌍</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-browser">—</div>
+          <div class="stat-label">Browser</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Health Reasons -->
+    <div class="health-reasons" id="health-reasons" style="display:none;">
+      <!-- Populated by JS when health is degraded/down -->
+    </div>
+
     <!-- AI Model Stack -->
     <div class="section">
-      <div class="section-title">🧠 AI Model Stack</div>
+      <div class="section-title">🧠 AI Model Stack <span class="help-tip" data-tip="Your configured AI models with automatic failover">?</span></div>
       <div class="model-grid" id="model-grid">
         <!-- Populated by JS -->
       </div>
@@ -74,8 +111,16 @@
 
     <!-- Real-Time Gmail Pipeline -->
     <div class="section">
-      <div class="section-title">📧 Real-Time Gmail Pipeline</div>
+      <div class="section-title">📧 Real-Time Gmail Pipeline <span class="help-tip" data-tip="Email processing flow from Gmail through to your channels">?</span></div>
       <div class="pipeline" id="pipeline">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Gateway Detail -->
+    <div class="section">
+      <div class="section-title">🌐 Gateway</div>
+      <div class="gateway-detail" id="gateway-detail">
         <!-- Populated by JS -->
       </div>
     </div>
@@ -109,7 +154,7 @@
 
     <!-- Model Management -->
     <div class="section">
-      <div class="section-title">⚙ Model Management</div>
+      <div class="section-title">⚙ Model Management <span class="help-tip" data-tip="Set primary model, manage fallback chain, and probe endpoints">?</span></div>
       <div class="model-mgmt-controls">
         <button class="btn btn-action" onclick="fetchModelDetails()">🔄 Refresh Models</button>
         <button class="btn btn-action" onclick="probeModels()">📡 Probe All Models</button>
@@ -125,7 +170,7 @@
 
     <!-- Security Audit -->
     <div class="section">
-      <div class="section-title">🛡 Security Audit</div>
+      <div class="section-title">🛡 Security Audit <span class="help-tip" data-tip="Scan for vulnerabilities and auto-fix security issues">?</span></div>
       <div class="security-controls">
         <button class="btn btn-action" onclick="runSecurityAudit()">🔍 Run Audit</button>
         <button class="btn btn-action btn-warn" onclick="confirmAction('securityAuditFix', 'Run deep security audit with auto-fix? This will attempt to resolve detected issues.')">🔧 Deep Audit + Fix</button>
@@ -140,8 +185,27 @@
 
     <!-- Sandbox Configuration -->
     <div class="section">
-      <div class="section-title">📦 Sandbox</div>
+      <div class="section-title">📦 Sandbox <span class="help-tip" data-tip="Sandbox isolates commands in a safe environment">?</span></div>
       <div class="sandbox-panel" id="sandbox-panel">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Browser Status -->
+    <div class="section">
+      <div class="section-title">🌍 Browser Automation</div>
+      <div class="browser-panel" id="browser-panel">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Configuration -->
+    <div class="section">
+      <div class="section-title">📋 Configuration</div>
+      <div class="config-controls">
+        <button class="btn btn-action" onclick="fetchConfigDetails()">🔄 Refresh Config</button>
+      </div>
+      <div class="config-grid" id="config-grid">
         <!-- Populated by JS -->
       </div>
     </div>
@@ -164,6 +228,57 @@
           <span class="connection-detail" id="conn-detail"></span>
         </div>
         <button class="btn btn-sm btn-ghost" onclick="probeConnection()">Re-probe</button>
+      </div>
+    </div>
+
+    <!-- Quick Start -->
+    <div class="section" id="quick-start-section">
+      <div class="section-title">🚀 Quick Start</div>
+      <div class="quick-start">
+        <div class="quick-start-title">What would you like to do?</div>
+        <div class="quick-start-desc">Common actions to get you started quickly. Each action runs with confirmation for safety.</div>
+        <div class="quick-start-actions">
+          <div class="quick-action-card" onclick="runDiagnostics()">
+            <div class="quick-action-icon">🩺</div>
+            <div class="quick-action-label">Health Check</div>
+            <div class="quick-action-hint">Run full diagnostics</div>
+          </div>
+          <div class="quick-action-card" onclick="runSecurityAudit()">
+            <div class="quick-action-icon">🛡</div>
+            <div class="quick-action-label">Security Scan</div>
+            <div class="quick-action-hint">Audit your setup</div>
+          </div>
+          <div class="quick-action-card" onclick="probeModels()">
+            <div class="quick-action-icon">📡</div>
+            <div class="quick-action-label">Probe Models</div>
+            <div class="quick-action-hint">Test AI endpoints</div>
+          </div>
+          <div class="quick-action-card" onclick="confirmAction('skillUpdate', 'Update all installed skills from ClawHub?')">
+            <div class="quick-action-icon">⬆</div>
+            <div class="quick-action-label">Update Skills</div>
+            <div class="quick-action-hint">Get latest from ClawHub</div>
+          </div>
+          <div class="quick-action-card" onclick="confirmAction('doctorFix', 'Run auto-fix? This will resolve common issues automatically.')">
+            <div class="quick-action-icon">🔧</div>
+            <div class="quick-action-label">Auto-Fix</div>
+            <div class="quick-action-hint">Fix common issues</div>
+          </div>
+          <div class="quick-action-card" onclick="fetchDeepStatus()">
+            <div class="quick-action-icon">📊</div>
+            <div class="quick-action-label">Deep Status</div>
+            <div class="quick-action-hint">Full system report</div>
+          </div>
+          <div class="quick-action-card" onclick="fetchLogs()">
+            <div class="quick-action-icon">📋</div>
+            <div class="quick-action-label">View Logs</div>
+            <div class="quick-action-hint">Recent activity</div>
+          </div>
+          <div class="quick-action-card" onclick="confirmAction('restart', 'Restart the OpenClaw agent?')">
+            <div class="quick-action-icon">↻</div>
+            <div class="quick-action-label">Restart Agent</div>
+            <div class="quick-action-hint">Fresh restart</div>
+          </div>
+        </div>
       </div>
     </div>
 
