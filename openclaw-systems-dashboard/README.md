@@ -17,9 +17,27 @@ Open **http://127.0.0.1:8789** in your browser.
 | Variable | Default | Description |
 |---|---|---|
 | `DASHBOARD_PORT` | `8789` | Port the dashboard listens on |
+| `DASHBOARD_HOST` | `127.0.0.1` | Bind address (`0.0.0.0` for remote access) |
+| `DASHBOARD_TOKEN` | *(none)* | Access token (**required** when using remote mode) |
 | `OPENCLAW_BIN` | `openclaw` | Path to the OpenClaw CLI binary |
 
-Example:
+### Local mode (default)
+
+```bash
+npm start
+# → http://127.0.0.1:8789  (no token needed)
+```
+
+### Remote mode (access from another machine)
+
+```bash
+DASHBOARD_HOST=0.0.0.0 DASHBOARD_TOKEN=my-secret-token-123 npm start
+# → http://<server-ip>:8789  (token required for all API calls)
+```
+
+Open the dashboard from any machine on your network. You'll be prompted to enter the token on first load.
+
+### Custom port + binary path
 
 ```bash
 DASHBOARD_PORT=9000 OPENCLAW_BIN=/usr/local/bin/openclaw npm start
@@ -92,7 +110,8 @@ If the OpenClaw CLI doesn't provide enough model detail, edit `server/model-stac
 
 ## Security
 
-- Binds exclusively to `127.0.0.1` — refuses to start otherwise.
+- Defaults to `127.0.0.1` (local only). Remote mode (`0.0.0.0`) requires `DASHBOARD_TOKEN`.
+- All API endpoints require `X-Dashboard-Token` header in remote mode (static assets are public so the login page can load).
 - Redacts any fields matching `token`, `secret`, `key`, `password`, `cookie`, `oauth`, `authorization`, `bearer`, plus long random/base64 strings.
 - The browser never contacts the OpenClaw gateway directly.
 - CLI commands are executed via `execFile` from a strict allowlist (no shell interpolation).

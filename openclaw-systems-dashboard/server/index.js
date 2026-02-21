@@ -19,7 +19,9 @@ const {
 } = require('./collector');
 
 const PORT = parseInt(process.env.DASHBOARD_PORT, 10) || 8789;
-const HOST = '127.0.0.1'; // Non-negotiable: local only
+const HOST = process.env.DASHBOARD_HOST || '127.0.0.1';
+const TOKEN = process.env.DASHBOARD_TOKEN || '';
+const REMOTE_MODE = HOST === '0.0.0.0' || (HOST !== '127.0.0.1' && HOST !== 'localhost' && HOST !== '::1');
 
 const app = express();
 
@@ -47,6 +49,23 @@ app.use((_req, res, next) => {
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
   next();
 });
+
+// ── Security: token authentication (required for remote mode) ────────────
+if (REMOTE_MODE) {
+  app.use((req, res, next) => {
+    // Allow the login page itself to load
+    if (req.path === '/' || req.path === '/index.html' ||
+        req.path.endsWith('.css') || req.path.endsWith('.js') ||
+        req.path === '/favicon.ico') {
+      return next();
+    }
+    const provided = req.headers['x-dashboard-token'] || req.query.token;
+    if (!provided || provided !== TOKEN) {
+      return res.status(401).json({ error: 'Unauthorized — invalid or missing token' });
+    }
+    next();
+  });
+}
 
 // ── Security: simple in-memory rate limiter ──────────────────────────────
 const rateLimitMap = new Map();
@@ -299,16 +318,21 @@ app.all('/api/*', (_req, res) => {
 
 // ── Startup safety check ──────────────────────────────────────────────────
 function startServer() {
-  if (HOST !== '127.0.0.1' && HOST !== 'localhost' && HOST !== '::1') {
-    console.error('FATAL: Dashboard MUST bind to loopback (127.0.0.1). Refusing to start.');
+  if (REMOTE_MODE && !TOKEN) {
+    console.error('FATAL: DASHBOARD_TOKEN is required when binding to a non-loopback address.');
+    console.error('  Set DASHBOARD_TOKEN=<your-secret> to enable remote access.');
     process.exit(1);
   }
+
+  const mode = REMOTE_MODE ? 'Remote (token-protected)' : 'Local-only';
+  const url = `http://${HOST === '0.0.0.0' ? '<your-ip>' : HOST}:${PORT}`;
 
   app.listen(PORT, HOST, () => {
     console.log(`\n  ┌──────────────────────────────────────────────┐`);
     console.log(`  │  OpenClaw Systems Dashboard                  │`);
-    console.log(`  │  Running at http://${HOST}:${PORT}          │`);
-    console.log(`  │  Local-only · Auto-refresh 15 s              │`);
+    console.log(`  │  ${url.padEnd(42)}│`);
+    console.log(`  │  ${mode.padEnd(42)}│`);
+    console.log(`  │  Auto-refresh 15 s                           │`);
     console.log(`  │  Security: headers + rate-limit + audit log  │`);
     console.log(`  └──────────────────────────────────────────────┘\n`);
   });

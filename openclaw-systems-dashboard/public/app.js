@@ -19,13 +19,62 @@ let rawLogLines = []; // stored for filtering
 // ── DOM references ──────────────────────────────────────────────────
 const $ = (id) => document.getElementById(id);
 
+// ── Token-aware fetch wrapper (for remote mode) ─────────────────────
+function getAuthToken() {
+  return localStorage.getItem('openclaw_dashboard_token') || '';
+}
+
+function setAuthToken(token) {
+  localStorage.setItem('openclaw_dashboard_token', token);
+}
+
+async function apiFetch(url, opts = {}) {
+  const token = getAuthToken();
+  if (token) {
+    opts.headers = { ...opts.headers, 'X-Dashboard-Token': token };
+  }
+  const res = await fetch(url, opts);
+  if (res.status === 401) {
+    showTokenPrompt();
+    throw new Error('Unauthorized — enter your dashboard token');
+  }
+  return res;
+}
+
+function showTokenPrompt() {
+  let overlay = $('token-prompt-overlay');
+  if (overlay) { overlay.style.display = 'flex'; return; }
+  overlay = document.createElement('div');
+  overlay.id = 'token-prompt-overlay';
+  overlay.className = 'token-prompt-overlay';
+  overlay.innerHTML = `
+    <div class="token-prompt">
+      <h3>Dashboard Token Required</h3>
+      <p>This dashboard is running in remote mode. Enter your access token:</p>
+      <input type="password" id="token-input" class="token-input" placeholder="Paste DASHBOARD_TOKEN here" autocomplete="off" />
+      <button id="token-submit-btn" class="btn btn-green" style="margin-top:0.75rem;width:100%">Connect</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  const input = $('token-input');
+  const btn = $('token-submit-btn');
+  btn.addEventListener('click', () => {
+    const val = input.value.trim();
+    if (val) { setAuthToken(val); overlay.style.display = 'none'; refresh(); }
+  });
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') btn.click();
+  });
+  input.focus();
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // POLLING & RENDER
 // ═══════════════════════════════════════════════════════════════════
 
 async function refresh() {
   try {
-    const res = await fetch('/api/summary');
+    const res = await apiFetch('/api/summary');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     render(data);
@@ -619,7 +668,7 @@ function renderModelManagement(mgmt) {
 async function fetchModelDetails() {
   showToast('Fetching model details…', 'info');
   try {
-    const res = await fetch('/api/models');
+    const res = await apiFetch('/api/models');
     const d = await res.json();
     if (d.success) {
       renderModelManagement(d);
@@ -635,7 +684,7 @@ async function fetchModelDetails() {
 async function probeModels() {
   showToast('Probing model endpoints…', 'info');
   try {
-    const res = await fetch('/api/models');
+    const res = await apiFetch('/api/models');
     const d = await res.json();
     if (d.success) {
       renderModelManagement(d);
@@ -700,7 +749,7 @@ function renderSecuritySummary(audit) {
 async function runSecurityAudit() {
   showToast('Running security audit…', 'info');
   try {
-    const res = await fetch('/api/security/audit', { method: 'POST' });
+    const res = await apiFetch('/api/security/audit', { method: 'POST' });
     const d = await res.json();
     if (d.success) {
       renderSecuritySummary(d);
@@ -775,7 +824,7 @@ async function fetchAuditLog() {
   const list = $('audit-log-list');
   list.innerHTML = '<div class="empty-state">Loading…</div>';
   try {
-    const res = await fetch('/api/audit-log');
+    const res = await apiFetch('/api/audit-log');
     const d = await res.json();
     if (!d.success || !d.entries || !d.entries.length) {
       list.innerHTML = '<div class="empty-state">No actions recorded yet</div>';
@@ -896,7 +945,7 @@ function renderConfig(config) {
 async function fetchConfigDetails() {
   showToast('Fetching configuration…', 'info');
   try {
-    const res = await fetch('/api/config');
+    const res = await apiFetch('/api/config');
     const d = await res.json();
     if (d.success) {
       renderConfig(d.config);
@@ -1136,7 +1185,7 @@ async function probeConnection() {
   indicator.className = 'connection-indicator';
 
   try {
-    const res = await fetch('/api/probe');
+    const res = await apiFetch('/api/probe');
     const d = await res.json();
     if (d.connected) {
       indicator.className = 'connection-indicator connected';
@@ -1161,7 +1210,7 @@ async function probeConnection() {
 async function runAction(action, targetId) {
   showToast(`Running: ${action}${targetId ? ' (' + targetId + ')' : ''}…`, 'info');
   try {
-    const res = await fetch('/api/action', {
+    const res = await apiFetch('/api/action', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, targetId: targetId || undefined }),
@@ -1209,7 +1258,7 @@ async function runDiagnostics() {
   const con = $('output-console');
   con.innerHTML = '<div class="output-line heading">Running diagnostics…</div>';
   try {
-    const res = await fetch('/api/diagnose', { method: 'POST' });
+    const res = await apiFetch('/api/diagnose', { method: 'POST' });
     const d = await res.json();
     if (!d.success) {
       con.innerHTML += `<div class="output-line error">Error: ${esc(d.error)}</div>`;
@@ -1242,7 +1291,7 @@ async function fetchDeepStatus() {
   const con = $('output-console');
   con.innerHTML = '<div class="output-line heading">Fetching deep status…</div>';
   try {
-    const res = await fetch('/api/status/deep');
+    const res = await apiFetch('/api/status/deep');
     const d = await res.json();
     if (!d.success) {
       con.innerHTML += `<div class="output-line error">Error: ${esc(d.error)}</div>`;
@@ -1267,7 +1316,7 @@ async function fetchLogs() {
   const filterBar = $('log-filter-bar');
   con.innerHTML = '<div class="output-line heading">Fetching logs…</div>';
   try {
-    const res = await fetch('/api/logs');
+    const res = await apiFetch('/api/logs');
     const d = await res.json();
     if (!d.success) {
       con.innerHTML += `<div class="output-line error">Error: ${esc(d.error)}</div>`;

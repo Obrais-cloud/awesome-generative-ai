@@ -2739,3 +2739,25 @@ a:focus-visible,
   .command-palette { width: 95%; }
   .palette-search { font-size: 14px; padding: 14px 16px; }
 }
+
+/* ── Token Prompt (remote mode) ──────────────────────────────── */
+.token-prompt-overlay {
+  position: fixed; inset: 0; z-index: 5000;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
+}
+.token-prompt {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 2rem; max-width: 400px; width: 90%;
+  text-align: center;
+}
+.token-prompt h3 { margin: 0 0 0.5rem; color: var(--accent); }
+.token-prompt p { margin: 0 0 1rem; color: var(--text-secondary); font-size: 0.9rem; }
+.token-input {
+  width: 100%; padding: 0.75rem 1rem; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--bg-body);
+  color: var(--text-primary); font-size: 1rem;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  box-sizing: border-box;
+}
+.token-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
