@@ -22,6 +22,10 @@
       <div class="header-controls">
         <button class="btn btn-sm btn-ghost theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark theme">🌙</button>
       </div>
+      <div class="header-security-badge" id="header-security-badge" title="Security posture">
+        <span class="security-badge-icon" id="security-badge-icon">🛡</span>
+        <span class="security-badge-label" id="security-badge-label">—</span>
+      </div>
       <div class="header-status">
         <span class="health-dot" id="health-dot"></span>
         <span class="health-label" id="health-label">Checking…</span>
@@ -117,6 +121,19 @@
           <div class="stat-value" id="stat-devices">—</div>
           <div class="stat-label">Devices</div>
         </div>
+      </div>
+    </div>
+
+    <!-- Notification Center -->
+    <div class="notification-center" id="notification-center" style="display:none;">
+      <div class="notification-header">
+        <span class="notification-bell">🔔</span>
+        <span class="notification-title">Alerts</span>
+        <span class="notification-count" id="notification-count">0</span>
+        <button class="btn btn-sm btn-ghost notification-dismiss" onclick="dismissNotifications()">Dismiss All</button>
+      </div>
+      <div class="notification-list" id="notification-list">
+        <!-- Populated by JS -->
       </div>
     </div>
 
@@ -241,6 +258,19 @@
         </div>
         <div class="security-checks" id="security-checks">
           <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Audit Log -->
+    <div class="section" data-section="audit-log">
+      <div class="section-title collapsible-title" onclick="toggleSection(this)">📜 Action Audit Log <span class="collapse-icon">▾</span> <span class="help-tip" data-tip="Recent mutating actions with timestamps and results">?</span></div>
+      <div class="section-content">
+        <div class="audit-controls">
+          <button class="btn btn-action" onclick="fetchAuditLog()">🔄 Refresh Log</button>
+        </div>
+        <div class="audit-log-list" id="audit-log-list">
+          <div class="empty-state">No actions recorded yet</div>
         </div>
       </div>
     </div>
@@ -511,6 +541,7 @@
       <div class="footer-meta" id="footer-meta">
         Last updated: <span id="last-updated">—</span>
         <span id="stale-indicator" class="stale-indicator" style="display:none;">STALE</span>
+        <button class="btn btn-sm btn-ghost" onclick="exportDashboardData()" title="Export dashboard snapshot as JSON">📥 Export</button>
       </div>
     </div>
 

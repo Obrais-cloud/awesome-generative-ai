@@ -1950,6 +1950,188 @@ a:focus-visible,
   .token-usage-summary { flex-direction: column; }
 }
 
+/* ── Notification Center ─────────────────────────────────────────── */
+.notification-center {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-accent);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+}
+
+.notification-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.notification-bell {
+  font-size: 16px;
+}
+
+.notification-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.notification-count {
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.notification-dismiss {
+  margin-left: auto;
+  font-size: 10px !important;
+}
+
+.notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.notification-item.critical {
+  background: var(--danger-bg);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+}
+
+.notification-item.warning {
+  background: var(--warning-bg);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.notification-item.info {
+  background: var(--accent-bg);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.notification-item-icon {
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.notification-item-text {
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.notification-item-time {
+  font-size: 10px;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+/* ── Security Badge (Header) ─────────────────────────────────────── */
+.header-security-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  font-size: 11px;
+  flex-shrink: 0;
+  cursor: default;
+  transition: background 0.3s;
+}
+
+.header-security-badge.secure {
+  border-color: rgba(52, 211, 153, 0.3);
+  background: rgba(52, 211, 153, 0.08);
+}
+.header-security-badge.warnings {
+  border-color: rgba(251, 191, 36, 0.3);
+  background: rgba(251, 191, 36, 0.08);
+}
+.header-security-badge.critical {
+  border-color: rgba(248, 113, 113, 0.3);
+  background: rgba(248, 113, 113, 0.08);
+}
+
+.security-badge-icon { font-size: 14px; }
+.security-badge-label {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* ── Audit Log ──────────────────────────────────────────────────── */
+.audit-controls {
+  margin-bottom: 12px;
+}
+
+.audit-log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.audit-entry {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: var(--bg-surface-deep);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+.audit-entry-icon { flex-shrink: 0; font-size: 12px; }
+.audit-entry-action {
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 120px;
+}
+.audit-entry-target {
+  color: var(--text-dim);
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 10px;
+}
+.audit-entry-result {
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+.audit-entry-result.success {
+  background: var(--success-bg);
+  color: var(--success-light);
+}
+.audit-entry-result.failed {
+  background: var(--danger-bg);
+  color: var(--danger-light);
+}
+.audit-entry-time {
+  color: var(--text-faint);
+  margin-left: auto;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
 /* ── Collapsible Sections ────────────────────────────────────────── */
 .collapsible-title {
   cursor: pointer;

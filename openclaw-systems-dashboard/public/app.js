@@ -52,6 +52,11 @@ function scheduleNext() {
 
 // ── Render everything ───────────────────────────────────────────────
 function render(d) {
+  lastDashboardData = d;
+
+  // Notifications (before header so they appear at top)
+  renderNotifications(d);
+
   // Header
   $('agent-name').textContent = d.agentName || '[AGENT_NAME]';
 
@@ -85,6 +90,7 @@ function render(d) {
   renderPairings(d.pendingPairings || []);
   renderModelManagement(d.modelManagement || {});
   renderSecuritySummary(d.securityAudit);
+  renderSecurityBadge(d.securityAudit, d.sandbox);
   renderSandbox(d.sandbox);
   renderBrowser(d.browser);
   renderConfig(d.config);
@@ -704,6 +710,94 @@ async function runSecurityAudit() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// SECURITY BADGE (HEADER)
+// ═══════════════════════════════════════════════════════════════════
+
+function renderSecurityBadge(audit, sandbox) {
+  const badge = $('header-security-badge');
+  const icon = $('security-badge-icon');
+  const label = $('security-badge-label');
+  if (!badge) return;
+
+  let score = 0;
+  let maxScore = 0;
+  const issues = [];
+
+  // Audit checks
+  if (audit && audit.total) {
+    maxScore += audit.total;
+    score += audit.passed || 0;
+    if (audit.critical) issues.push(audit.critical + ' critical');
+    if (audit.warnings) issues.push(audit.warnings + ' warnings');
+  }
+
+  // Sandbox bonus
+  maxScore += 1;
+  if (sandbox && sandbox.enabled) {
+    score += 1;
+  } else {
+    issues.push('sandbox off');
+  }
+
+  // Server-side security (we know these are always on)
+  maxScore += 3;
+  score += 3; // CSP headers, rate limiting, audit logging
+
+  const pct = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
+
+  badge.className = 'header-security-badge';
+  if (audit && audit.critical) {
+    badge.classList.add('critical');
+    icon.textContent = '🔴';
+    label.textContent = pct + '% — ' + issues[0];
+  } else if (issues.length && pct < 90) {
+    badge.classList.add('warnings');
+    icon.textContent = '🟡';
+    label.textContent = pct + '%';
+  } else {
+    badge.classList.add('secure');
+    icon.textContent = '🟢';
+    label.textContent = pct + '%';
+  }
+
+  badge.title = 'Security Score: ' + score + '/' + maxScore + (issues.length ? ' — ' + issues.join(', ') : '');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// AUDIT LOG
+// ═══════════════════════════════════════════════════════════════════
+
+async function fetchAuditLog() {
+  const list = $('audit-log-list');
+  list.innerHTML = '<div class="empty-state">Loading…</div>';
+  try {
+    const res = await fetch('/api/audit-log');
+    const d = await res.json();
+    if (!d.success || !d.entries || !d.entries.length) {
+      list.innerHTML = '<div class="empty-state">No actions recorded yet</div>';
+      return;
+    }
+    list.innerHTML = d.entries.map((e) => {
+      const icon = e.success ? '✅' : '❌';
+      const resultClass = e.success ? 'success' : 'failed';
+      const time = e.timestamp ? new Date(e.timestamp).toLocaleString() : '';
+      return `
+        <div class="audit-entry">
+          <div class="audit-entry-icon">${icon}</div>
+          <div class="audit-entry-action">${esc(e.action)}</div>
+          ${e.targetId ? `<div class="audit-entry-target">${esc(e.targetId)}</div>` : ''}
+          <div class="audit-entry-result ${resultClass}">${e.success ? 'OK' : 'FAIL'}</div>
+          ${e.error ? `<div class="audit-entry-target">${esc(e.error)}</div>` : ''}
+          <div class="audit-entry-time">${esc(time)}</div>
+        </div>`;
+    }).join('');
+    showToast('Audit log refreshed', 'success');
+  } catch (err) {
+    list.innerHTML = `<div class="empty-state">Error: ${esc(err.message)}</div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // SANDBOX
 // ═══════════════════════════════════════════════════════════════════
 
@@ -1234,6 +1328,113 @@ function esc(s) {
   const el = document.createElement('span');
   el.textContent = String(s);
   return el.innerHTML;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// NOTIFICATION CENTER
+// ═══════════════════════════════════════════════════════════════════
+
+let notificationsDismissed = false;
+let lastDashboardData = null;
+
+function buildNotifications(d) {
+  const alerts = [];
+  const now = new Date().toLocaleTimeString();
+
+  // Security critical issues
+  if (d.securityAudit && d.securityAudit.critical > 0) {
+    alerts.push({ level: 'critical', icon: '🔴', text: d.securityAudit.critical + ' critical security issue(s) found — run Deep Audit + Fix', time: now });
+  }
+
+  // Gateway down
+  if (d.gateway && !d.gateway.running) {
+    alerts.push({ level: 'critical', icon: '🌐', text: 'Gateway is not running — services may be unreachable', time: now });
+  }
+
+  // Sandbox disabled
+  if (d.sandbox && !d.sandbox.enabled) {
+    alerts.push({ level: 'warning', icon: '📦', text: 'Sandbox is disabled — commands run without isolation', time: now });
+  }
+
+  // Failed cron jobs
+  const failedCrons = (d.cronJobs || []).filter((j) => j.status === 'Failed');
+  if (failedCrons.length) {
+    alerts.push({ level: 'warning', icon: '⏱', text: failedCrons.length + ' cron job(s) failed: ' + failedCrons.map((j) => j.name).join(', '), time: now });
+  }
+
+  // Down channels
+  const downChannels = (d.channels || []).filter((c) => c.status === 'Down');
+  if (downChannels.length) {
+    alerts.push({ level: 'warning', icon: '📡', text: downChannels.length + ' channel(s) down: ' + downChannels.map((c) => c.name).join(', '), time: now });
+  }
+
+  // High memory usage (system resources)
+  if (d.systemResources && d.systemResources.memory && d.systemResources.memory.usedPercent > 90) {
+    alerts.push({ level: 'warning', icon: '💻', text: 'System memory usage at ' + d.systemResources.memory.usedPercent + '%', time: now });
+  }
+
+  // High cost alert
+  if (d.tokenUsage && d.tokenUsage.totalCost > 10) {
+    alerts.push({ level: 'info', icon: '💰', text: 'Token spend has reached $' + d.tokenUsage.totalCost.toFixed(2), time: now });
+  }
+
+  return alerts;
+}
+
+function renderNotifications(d) {
+  if (notificationsDismissed) return;
+  const alerts = buildNotifications(d);
+  const center = $('notification-center');
+  const list = $('notification-list');
+  const count = $('notification-count');
+
+  if (!alerts.length) {
+    center.style.display = 'none';
+    return;
+  }
+
+  center.style.display = '';
+  count.textContent = alerts.length;
+  list.innerHTML = alerts.map((a) => `
+    <div class="notification-item ${esc(a.level)}">
+      <div class="notification-item-icon">${a.icon}</div>
+      <div class="notification-item-text">${esc(a.text)}</div>
+      <div class="notification-item-time">${esc(a.time)}</div>
+    </div>
+  `).join('');
+}
+
+function dismissNotifications() {
+  notificationsDismissed = true;
+  $('notification-center').style.display = 'none';
+  // Reset after 2 minutes so new alerts can show
+  setTimeout(() => { notificationsDismissed = false; }, 120_000);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// DATA EXPORT
+// ═══════════════════════════════════════════════════════════════════
+
+function exportDashboardData() {
+  const data = lastDashboardData;
+  if (!data) {
+    showToast('No dashboard data to export', 'error');
+    return;
+  }
+  const exportPayload = {
+    exportedAt: new Date().toISOString(),
+    dashboard: data,
+  };
+  const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'openclaw-dashboard-' + new Date().toISOString().slice(0, 10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Dashboard data exported', 'success');
 }
 
 // ═══════════════════════════════════════════════════════════════════

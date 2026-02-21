@@ -863,7 +863,7 @@ async function executeAction(actionKey, targetId) {
 
   const args = [...spec.args];
   if (spec.acceptsId) {
-    if (!targetId || typeof targetId !== 'string' || !/^[\w\-.:]+$/.test(targetId)) {
+    if (!targetId || typeof targetId !== 'string' || targetId.length > 128 || !/^[\w\-.:]+$/.test(targetId)) {
       return { success: false, error: 'Invalid or missing target ID' };
     }
     args.push(targetId);
