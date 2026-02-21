@@ -1,5 +1,6 @@
 'use strict';
 
+const crypto = require('crypto');
 const express = require('express');
 const path = require('path');
 const {
@@ -53,14 +54,14 @@ app.use((_req, res, next) => {
 // ── Security: token authentication (required for remote mode) ────────────
 if (REMOTE_MODE) {
   app.use((req, res, next) => {
-    // Allow the login page itself to load
-    if (req.path === '/' || req.path === '/index.html' ||
-        req.path.endsWith('.css') || req.path.endsWith('.js') ||
-        req.path === '/favicon.ico') {
+    // Allow static assets to load (never /api/ paths)
+    if (!req.path.startsWith('/api/')) {
       return next();
     }
     const provided = req.headers['x-dashboard-token'] || req.query.token;
-    if (!provided || provided !== TOKEN) {
+    if (!provided || typeof provided !== 'string' ||
+        provided.length !== TOKEN.length ||
+        !crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(TOKEN))) {
       return res.status(401).json({ error: 'Unauthorized — invalid or missing token' });
     }
     next();
@@ -329,7 +330,7 @@ function startServer(portOverride) {
   const mode = REMOTE_MODE ? 'Remote (token-protected)' : 'Local-only';
   const url = `http://${HOST === '0.0.0.0' ? '<your-ip>' : HOST}:${port}`;
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const server = app.listen(port, HOST, () => {
       console.log(`\n  ┌──────────────────────────────────────────────┐`);
       console.log(`  │  OpenClaw Systems Dashboard                  │`);
@@ -340,6 +341,7 @@ function startServer(portOverride) {
       console.log(`  └──────────────────────────────────────────────┘\n`);
       resolve({ server, port, url: `http://127.0.0.1:${port}` });
     });
+    server.on('error', reject);
   });
 }
 

@@ -393,7 +393,7 @@ body {
 
 .cron-last-run {
   font-size: 10px;
-  color: #5858880;
+  color: #585888;
   margin-top: 2px;
 }
 
@@ -667,7 +667,7 @@ body {
 
 .skill-version {
   font-size: 10px;
-  color: #5858880;
+  color: #585888;
   font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
 }
 
@@ -1508,7 +1508,7 @@ body {
 
 .quick-action-hint {
   font-size: 10px;
-  color: #5858880;
+  color: #585888;
   line-height: 1.4;
 }
 
@@ -2656,7 +2656,7 @@ a:focus-visible,
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 3000;
+  z-index: 3500;
   backdrop-filter: blur(4px);
 }
 
@@ -2747,7 +2747,7 @@ a:focus-visible,
   background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
 }
 .token-prompt {
-  background: var(--bg-card); border: 1px solid var(--border);
+  background: var(--bg-card); border: 1px solid var(--border-subtle);
   border-radius: 12px; padding: 2rem; max-width: 400px; width: 90%;
   text-align: center;
 }
@@ -2755,7 +2755,7 @@ a:focus-visible,
 .token-prompt p { margin: 0 0 1rem; color: var(--text-secondary); font-size: 0.9rem; }
 .token-input {
   width: 100%; padding: 0.75rem 1rem; border-radius: 8px;
-  border: 1px solid var(--border); background: var(--bg-body);
+  border: 1px solid var(--border-subtle); background: var(--bg-body);
   color: var(--text-primary); font-size: 1rem;
   font-family: 'SF Mono', 'Fira Code', monospace;
   box-sizing: border-box;

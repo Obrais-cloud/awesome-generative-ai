@@ -38,6 +38,7 @@ Open **http://127.0.0.1:8789** in your browser.
 | `DASHBOARD_PORT` | `8789` | Port the dashboard listens on |
 | `DASHBOARD_HOST` | `127.0.0.1` | Bind address (`0.0.0.0` for remote access) |
 | `DASHBOARD_TOKEN` | *(none)* | Access token (**required** when using remote mode) |
+| `DASHBOARD_UPDATE_URL` | *(none)* | URL to JSON file for auto-update checks |
 | `OPENCLAW_BIN` | `openclaw` | Path to the OpenClaw CLI binary |
 
 ### Local mode (default)
@@ -126,6 +127,26 @@ See `sample-payload.json` for a full example of `/api/summary` output.
 ## Model Stack Override
 
 If the OpenClaw CLI doesn't provide enough model detail, edit `server/model-stack.override.json` to supplement display information. **Never put secrets in this file.**
+
+## Auto-Updates (Desktop App)
+
+The Electron app can check for updates automatically. Host a JSON file on any web server:
+
+```json
+{
+  "version": "1.1.0",
+  "url": "https://your-server.com/downloads/OpenClaw-Dashboard-1.1.0.AppImage",
+  "notes": "Bug fixes and performance improvements"
+}
+```
+
+Then launch with:
+
+```bash
+DASHBOARD_UPDATE_URL=https://your-server.com/update.json npm run electron
+```
+
+The app checks every 4 hours and prompts the user when a newer version is found. You can also check manually via the **Help > Check for Updates** menu.
 
 ## Security
 

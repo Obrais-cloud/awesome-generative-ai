@@ -453,7 +453,8 @@ function renderCron(jobs) {
     const lastRunLine = j.lastRun
       ? `<div class="cron-last-run">Last: ${esc(new Date(j.lastRun).toLocaleString())}</div>`
       : '';
-    const jobId = esc(j.name);
+    const jobId = jsEsc(j.name);
+    const jobIdHtml = esc(j.name);
     const toggleBtn = j.status === 'Disabled'
       ? `<button class="btn btn-sm btn-action" onclick="runAction('cronEnable','${jobId}')" title="Enable">▶</button>`
       : `<button class="btn btn-sm btn-ghost" onclick="runAction('cronDisable','${jobId}')" title="Disable">⏸</button>`;
@@ -463,7 +464,7 @@ function renderCron(jobs) {
       <div class="cron-item">
         <div class="cron-icon">${icon}</div>
         <div class="cron-body">
-          <div class="cron-name">${jobId}</div>
+          <div class="cron-name">${jobIdHtml}</div>
           <div class="cron-schedule">${esc(j.schedule)}</div>
           ${lastRunLine}
         </div>
@@ -537,10 +538,11 @@ function renderChannelActions(channels) {
     return;
   }
   el.innerHTML = channels.map((c) => {
-    const name = esc(c.name);
+    const nameJs = jsEsc(c.name);
+    const nameHtml = esc(c.name);
     const statusClass = c.status === 'Down' ? 'btn-danger' : (c.status === 'Degraded' ? 'btn-warn' : '');
-    return `<button class="btn btn-action ${statusClass}" onclick="runAction('channelReconnect','${name}')">↻ Reconnect ${name}</button>` +
-      `<button class="btn btn-action" onclick="runAction('channelLogin','${name}')">🔑 Login ${name}</button>`;
+    return `<button class="btn btn-action ${statusClass}" onclick="runAction('channelReconnect','${nameJs}')">↻ Reconnect ${nameHtml}</button>` +
+      `<button class="btn btn-action" onclick="runAction('channelLogin','${nameJs}')">🔑 Login ${nameHtml}</button>`;
   }).join('');
 }
 
@@ -557,7 +559,8 @@ function renderSkills(skills) {
   list.innerHTML = skills.map((s) => {
     const icon = s.enabled ? '🟢' : '⚫';
     const versionTag = s.version ? `<span class="skill-version">${esc(s.version)}</span>` : '';
-    const slug = esc(s.slug || s.name);
+    const slugJs = jsEsc(s.slug || s.name);
+    const slugHtml = esc(s.slug || s.name);
     return `
       <div class="skill-item">
         <div class="skill-icon">${icon}</div>
@@ -567,7 +570,7 @@ function renderSkills(skills) {
         </div>
         <div class="skill-meta">
           ${versionTag}
-          <button class="btn btn-sm btn-ghost" onclick="confirmAction('skillUninstall', 'Uninstall skill: ${slug}?', '${slug}')" title="Uninstall">✕</button>
+          <button class="btn btn-sm btn-ghost" onclick="confirmAction('skillUninstall', 'Uninstall skill: ${slugHtml}?', '${slugJs}')" title="Uninstall">✕</button>
         </div>
       </div>`;
   }).join('');
@@ -586,7 +589,7 @@ function renderPairings(pairings) {
   }
   section.style.display = '';
   list.innerHTML = pairings.map((p) => {
-    const id = esc(p.id);
+    const idJs = jsEsc(p.id);
     const time = p.requestedAt ? new Date(p.requestedAt).toLocaleString() : '';
     return `
       <div class="pairing-item">
@@ -594,7 +597,7 @@ function renderPairings(pairings) {
           <div class="pairing-name">${esc(p.name || p.id)}</div>
           <div class="pairing-detail">${esc(p.channel)}${time ? ' · ' + esc(time) : ''}</div>
         </div>
-        <button class="btn btn-action" onclick="runAction('pairingApprove','${id}')">✓ Approve</button>
+        <button class="btn btn-action" onclick="runAction('pairingApprove','${idJs}')">✓ Approve</button>
       </div>`;
   }).join('');
 }
@@ -642,8 +645,8 @@ function renderModelManagement(mgmt) {
         </div>
         <div class="model-mgmt-actions">
           ${probeHTML}
-          ${!m.primary ? `<button class="btn btn-sm btn-action" onclick="confirmAction('modelSet','Set ${esc(m.id)} as primary model?','${esc(m.id)}')" title="Set as primary">⭐</button>` : ''}
-          <button class="btn btn-sm btn-ghost" onclick="confirmAction('modelFallbackAdd','Add ${esc(m.id)} to fallback chain?','${esc(m.id)}')" title="Add to fallbacks">+FB</button>
+          ${!m.primary ? `<button class="btn btn-sm btn-action" onclick="confirmAction('modelSet','Set ${esc(m.id)} as primary model?','${jsEsc(m.id)}')" title="Set as primary">⭐</button>` : ''}
+          <button class="btn btn-sm btn-ghost" onclick="confirmAction('modelFallbackAdd','Add ${esc(m.id)} to fallback chain?','${jsEsc(m.id)}')" title="Add to fallbacks">+FB</button>
         </div>
       </div>`;
   }).join('');
@@ -656,7 +659,7 @@ function renderModelManagement(mgmt) {
       `<div class="fallback-chip">
         <span>${esc(f.model)}</span>
         <span class="fallback-priority">#${f.priority || '?'}</span>
-        <span class="fallback-remove" onclick="confirmAction('modelFallbackRm','Remove ${esc(f.model)} from fallback chain?','${esc(f.model)}')" title="Remove">✕</span>
+        <span class="fallback-remove" onclick="confirmAction('modelFallbackRm','Remove ${esc(f.model)} from fallback chain?','${jsEsc(f.model)}')" title="Remove">✕</span>
       </div>`
     );
     fallbackList.innerHTML = chips.join('<span class="fallback-arrow">→</span>');
@@ -1100,7 +1103,7 @@ function renderNodesAndDevices(nodesInfo, devices) {
             <div class="node-name">${esc(n.name || n.id)}</div>
             <div class="node-meta">Pending approval</div>
           </div>
-          <button class="btn btn-sm btn-action" onclick="runAction('nodeApprove','${esc(n.id)}')">✓ Approve</button>
+          <button class="btn btn-sm btn-action" onclick="runAction('nodeApprove','${jsEsc(n.id)}')">✓ Approve</button>
         </div>`;
     }
     html += '</div>';
@@ -1114,7 +1117,7 @@ function renderNodesAndDevices(nodesInfo, devices) {
         <div class="device-card${d.current ? ' current' : ''}">
           <div class="device-name">${esc(d.name || d.id)}${d.current ? ' <span class="pill pill-primary-tag">THIS</span>' : ''}</div>
           <div class="device-platform">${esc(d.platform || '')}</div>
-          ${!d.current ? `<button class="btn btn-sm btn-ghost" onclick="confirmAction('deviceRevoke','Revoke device ${esc(d.name || d.id)}?','${esc(d.id)}')" title="Revoke">✕</button>` : ''}
+          ${!d.current ? `<button class="btn btn-sm btn-ghost" onclick="confirmAction('deviceRevoke','Revoke device ${esc(d.name || d.id)}?','${jsEsc(d.id)}')" title="Revoke">✕</button>` : ''}
         </div>`;
     }
     html += '</div>';
@@ -1382,6 +1385,11 @@ function esc(s) {
   const el = document.createElement('span');
   el.textContent = String(s);
   return el.innerHTML;
+}
+
+/** Escape a value for safe use inside JS string literals in onclick handlers */
+function jsEsc(s) {
+  return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
 }
 
 // ═══════════════════════════════════════════════════════════════════
