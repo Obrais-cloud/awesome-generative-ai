@@ -275,6 +275,16 @@
       </div>
     </div>
 
+    <!-- Activity Heatmap -->
+    <div class="section" data-section="activity">
+      <div class="section-title collapsible-title" onclick="toggleSection(this)">📊 Activity Heatmap <span class="collapse-icon">▾</span> <span class="help-tip" data-tip="Dashboard interaction frequency over the last 13 weeks">?</span></div>
+      <div class="section-content">
+        <div class="heatmap-container" id="heatmap-grid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
     <!-- Sandbox Configuration -->
     <div class="section" data-section="sandbox">
       <div class="section-title collapsible-title" onclick="toggleSection(this)">📦 Sandbox <span class="collapse-icon">▾</span> <span class="help-tip" data-tip="Sandbox isolates commands in a safe environment">?</span></div>
@@ -534,6 +544,32 @@
       </div>
     </div>
 
+    <!-- Command Palette -->
+    <div class="command-palette-overlay" id="command-palette" style="display:none;" onclick="if(event.target===this)closeCommandPalette()">
+      <div class="command-palette">
+        <input type="text" id="palette-search" class="palette-search" placeholder="Type a command or search…" oninput="filterCommandPalette()" onkeydown="handlePaletteKey(event)">
+        <div class="palette-results" id="palette-results"></div>
+      </div>
+    </div>
+
+    <!-- Keyboard Shortcuts Help -->
+    <div class="shortcuts-panel" id="shortcuts-panel" style="display:none;" onclick="if(event.target===this)toggleShortcutsHelp()">
+      <div class="shortcuts-dialog">
+        <div class="shortcuts-title">Keyboard Shortcuts</div>
+        <div class="shortcuts-grid">
+          <div class="shortcut-row"><kbd>?</kbd><span>Toggle this help</span></div>
+          <div class="shortcut-row"><kbd>Ctrl+K</kbd><span>Command palette</span></div>
+          <div class="shortcut-row"><kbd>r</kbd><span>Refresh dashboard</span></div>
+          <div class="shortcut-row"><kbd>Shift+T</kbd><span>Toggle theme</span></div>
+          <div class="shortcut-row"><kbd>Shift+E</kbd><span>Export data</span></div>
+          <div class="shortcut-row"><kbd>/</kbd><span>Focus log search</span></div>
+          <div class="shortcut-row"><kbd>1</kbd> – <kbd>9</kbd><span>Jump to section</span></div>
+          <div class="shortcut-row"><kbd>Esc</kbd><span>Close panel</span></div>
+        </div>
+        <button class="btn btn-sm btn-ghost" onclick="toggleShortcutsHelp()" style="margin-top:16px">Close</button>
+      </div>
+    </div>
+
     <!-- Footer -->
     <div class="footer">
       <div class="footer-line">· H/W — MAC MINI M4 ·</div>
@@ -542,6 +578,7 @@
         Last updated: <span id="last-updated">—</span>
         <span id="stale-indicator" class="stale-indicator" style="display:none;">STALE</span>
         <button class="btn btn-sm btn-ghost" onclick="exportDashboardData()" title="Export dashboard snapshot as JSON">📥 Export</button>
+        <span class="footer-shortcut-hint" title="Press ? for all shortcuts">⌨ <kbd>Ctrl+K</kbd> Command Palette</span>
       </div>
     </div>
 

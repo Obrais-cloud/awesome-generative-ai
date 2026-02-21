@@ -53,6 +53,8 @@ function scheduleNext() {
 // ── Render everything ───────────────────────────────────────────────
 function render(d) {
   lastDashboardData = d;
+  trackActivity();
+  if (d.tokenUsage) trackCostDataPoint(d.tokenUsage.totalCost);
 
   // Notifications (before header so they appear at top)
   renderNotifications(d);
@@ -100,6 +102,8 @@ function render(d) {
   renderNodesAndDevices(d.nodes, d.devices || []);
   renderHeartbeat(d.heartbeat);
   renderFeatures(d.features || []);
+  renderActivityHeatmap();
+  renderCostSparkline();
 
   // Keep channel data for control panel
   lastChannelsData = d.channels || [];
@@ -947,6 +951,7 @@ function renderTokenUsage(usage) {
     html += '</div>';
   }
 
+  html += '<div class="cost-sparkline-container" id="cost-sparkline"></div>';
   panel.innerHTML = html;
 }
 
@@ -1523,6 +1528,344 @@ function filterLogs() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// ACTIVITY HEATMAP
+// ═══════════════════════════════════════════════════════════════════
+
+function trackActivity() {
+  const key = new Date().toISOString().slice(0, 10);
+  try {
+    const data = JSON.parse(localStorage.getItem('openclaw_activity') || '{}');
+    data[key] = (data[key] || 0) + 1;
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 91);
+    const cutoffKey = cutoff.toISOString().slice(0, 10);
+    for (const k of Object.keys(data)) {
+      if (k < cutoffKey) delete data[k];
+    }
+    localStorage.setItem('openclaw_activity', JSON.stringify(data));
+  } catch {}
+}
+
+function renderActivityHeatmap() {
+  const container = $('heatmap-grid');
+  if (!container) return;
+  let data = {};
+  try { data = JSON.parse(localStorage.getItem('openclaw_activity') || '{}'); } catch {}
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const weeks = 13;
+
+  // Start from the Sunday N weeks ago
+  const start = new Date(today);
+  start.setDate(start.getDate() - start.getDay() - (weeks - 1) * 7);
+
+  // Gather all counts for color scaling
+  const counts = [];
+  const tmp = new Date(start);
+  for (let i = 0; i < weeks * 7; i++) {
+    counts.push(data[tmp.toISOString().slice(0, 10)] || 0);
+    tmp.setDate(tmp.getDate() + 1);
+  }
+  const maxVal = Math.max(1, ...counts);
+
+  let html = '<div class="heatmap-day-labels"><span></span><span>Mon</span><span></span><span>Wed</span><span></span><span>Fri</span><span></span></div>';
+  html += '<div class="heatmap-columns">';
+  const cell = new Date(start);
+  for (let w = 0; w < weeks; w++) {
+    html += '<div class="heatmap-col">';
+    for (let d = 0; d < 7; d++) {
+      const dateKey = cell.toISOString().slice(0, 10);
+      const count = data[dateKey] || 0;
+      const future = cell > today;
+      let level = 0;
+      if (!future && count > 0) {
+        const ratio = count / maxVal;
+        level = ratio <= 0.25 ? 1 : ratio <= 0.5 ? 2 : ratio <= 0.75 ? 3 : 4;
+      }
+      const cls = future ? 'heatmap-cell future' : 'heatmap-cell level-' + level;
+      const tip = future ? '' : dateKey + ': ' + count + ' interaction' + (count !== 1 ? 's' : '');
+      html += '<div class="' + cls + '" title="' + tip + '"></div>';
+      cell.setDate(cell.getDate() + 1);
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+
+  const total = counts.reduce((a, b) => a + b, 0);
+  const active = counts.filter(c => c > 0).length;
+  html += '<div class="heatmap-summary">' + total + ' interactions over ' + active + ' active day' + (active !== 1 ? 's' : '') + '</div>';
+  container.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// COST TREND SPARKLINE
+// ═══════════════════════════════════════════════════════════════════
+
+function trackCostDataPoint(cost) {
+  if (typeof cost !== 'number') return;
+  try {
+    const points = JSON.parse(localStorage.getItem('openclaw_cost_trend') || '[]');
+    const now = Date.now();
+    points.push({ t: now, v: cost });
+    // Keep last 100 points, only last 24h
+    const cutoff = now - 86400000;
+    const filtered = points.filter(p => p.t > cutoff).slice(-100);
+    localStorage.setItem('openclaw_cost_trend', JSON.stringify(filtered));
+  } catch {}
+}
+
+function renderCostSparkline() {
+  const container = $('cost-sparkline');
+  if (!container) return;
+
+  let points = [];
+  try { points = JSON.parse(localStorage.getItem('openclaw_cost_trend') || '[]'); } catch {}
+  if (points.length < 2) {
+    container.innerHTML = '<span class="sparkline-empty">Collecting cost data\u2026</span>';
+    return;
+  }
+
+  const values = points.map(p => p.v);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const w = 200;
+  const h = 40;
+  const stepX = w / (values.length - 1);
+  const pathPoints = values.map((v, i) => {
+    const x = Math.round(i * stepX * 10) / 10;
+    const y = Math.round((h - ((v - min) / range) * (h - 4) - 2) * 10) / 10;
+    return x + ',' + y;
+  });
+
+  const pathD = 'M' + pathPoints.join(' L');
+  const areaD = pathD + ' L' + w + ',' + h + ' L0,' + h + ' Z';
+
+  const latest = values[values.length - 1];
+  const prev = values[values.length - 2];
+  const trend = latest > prev ? 'up' : latest < prev ? 'down' : 'flat';
+  const trendIcon = trend === 'up' ? '\u2191' : trend === 'down' ? '\u2193' : '\u2192';
+  const trendClass = trend === 'up' ? 'trend-up' : trend === 'down' ? 'trend-down' : 'trend-flat';
+
+  container.innerHTML =
+    '<div class="sparkline-chart">' +
+      '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">' +
+        '<path d="' + areaD + '" class="sparkline-area"/>' +
+        '<path d="' + pathD + '" class="sparkline-line" fill="none"/>' +
+      '</svg>' +
+    '</div>' +
+    '<span class="sparkline-trend ' + trendClass + '">' + trendIcon + ' $' + latest.toFixed(2) + '</span>';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ═══════════════════════════════════════════════════════════════════
+
+const SECTION_SHORTCUTS = {
+  '1': 'system-resources',
+  '2': 'model-stack',
+  '3': 'cron-jobs',
+  '4': 'pipeline',
+  '5': 'gateway',
+  '6': 'channels',
+  '7': 'skills',
+  '8': 'security',
+  '9': 'token-usage',
+};
+
+function handleKeyboardShortcuts(e) {
+  // Ignore when typing in inputs
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+  // Ignore if confirm modal is open
+  if ($('confirm-overlay').style.display === 'flex') return;
+
+  const key = e.key;
+  const ctrlOrMeta = e.ctrlKey || e.metaKey;
+
+  // Command palette: Ctrl+K / Cmd+K
+  if (ctrlOrMeta && key === 'k') {
+    e.preventDefault();
+    toggleCommandPalette();
+    return;
+  }
+
+  // If command palette is open, don't process other shortcuts
+  if ($('command-palette').style.display === 'flex') return;
+
+  // Shortcuts help: ?
+  if (key === '?') {
+    e.preventDefault();
+    toggleShortcutsHelp();
+    return;
+  }
+
+  // Escape closes open panels
+  if (key === 'Escape') {
+    if ($('shortcuts-panel').style.display === 'flex') {
+      $('shortcuts-panel').style.display = 'none';
+    }
+    return;
+  }
+
+  // Refresh: r
+  if (key === 'r') {
+    e.preventDefault();
+    refresh();
+    showToast('Refreshing dashboard\u2026', 'info');
+    return;
+  }
+
+  // Toggle theme: Shift+T
+  if (key === 'T') {
+    e.preventDefault();
+    toggleTheme();
+    return;
+  }
+
+  // Export: Shift+E
+  if (key === 'E') {
+    e.preventDefault();
+    exportDashboardData();
+    return;
+  }
+
+  // Focus log search: /
+  if (key === '/') {
+    const searchInput = $('log-search');
+    if (searchInput) {
+      e.preventDefault();
+      searchInput.focus();
+    }
+    return;
+  }
+
+  // Number keys: jump to section
+  if (SECTION_SHORTCUTS[key]) {
+    e.preventDefault();
+    scrollToSection(SECTION_SHORTCUTS[key]);
+    return;
+  }
+}
+
+function toggleShortcutsHelp() {
+  const panel = $('shortcuts-panel');
+  panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// COMMAND PALETTE
+// ═══════════════════════════════════════════════════════════════════
+
+const PALETTE_COMMANDS = [
+  { name: 'Refresh Dashboard', action: function() { refresh(); showToast('Refreshing\u2026', 'info'); }, keys: 'r', category: 'General' },
+  { name: 'Toggle Theme', action: function() { toggleTheme(); }, keys: 'Shift+T', category: 'General' },
+  { name: 'Export Data', action: function() { exportDashboardData(); }, keys: 'Shift+E', category: 'General' },
+  { name: 'Keyboard Shortcuts', action: function() { toggleShortcutsHelp(); }, keys: '?', category: 'General' },
+  { name: 'Run Health Check', action: function() { runDiagnostics(); }, category: 'Actions' },
+  { name: 'Run Security Audit', action: function() { runSecurityAudit(); }, category: 'Actions' },
+  { name: 'Probe All Models', action: function() { probeModels(); }, category: 'Actions' },
+  { name: 'Fetch Logs', action: function() { fetchLogs(); }, category: 'Actions' },
+  { name: 'Deep Status', action: function() { fetchDeepStatus(); }, category: 'Actions' },
+  { name: 'Refresh Config', action: function() { fetchConfigDetails(); }, category: 'Actions' },
+  { name: 'Refresh Models', action: function() { fetchModelDetails(); }, category: 'Actions' },
+  { name: 'Refresh Audit Log', action: function() { fetchAuditLog(); }, category: 'Actions' },
+  { name: 'Go to System Resources', action: function() { scrollToSection('system-resources'); }, keys: '1', category: 'Navigate' },
+  { name: 'Go to AI Models', action: function() { scrollToSection('model-stack'); }, keys: '2', category: 'Navigate' },
+  { name: 'Go to Cron Jobs', action: function() { scrollToSection('cron-jobs'); }, keys: '3', category: 'Navigate' },
+  { name: 'Go to Pipeline', action: function() { scrollToSection('pipeline'); }, keys: '4', category: 'Navigate' },
+  { name: 'Go to Gateway', action: function() { scrollToSection('gateway'); }, keys: '5', category: 'Navigate' },
+  { name: 'Go to Channels', action: function() { scrollToSection('channels'); }, keys: '6', category: 'Navigate' },
+  { name: 'Go to Skills', action: function() { scrollToSection('skills'); }, keys: '7', category: 'Navigate' },
+  { name: 'Go to Security', action: function() { scrollToSection('security'); }, keys: '8', category: 'Navigate' },
+  { name: 'Go to Token Usage', action: function() { scrollToSection('token-usage'); }, keys: '9', category: 'Navigate' },
+  { name: 'Go to Memory', action: function() { scrollToSection('memory'); }, category: 'Navigate' },
+  { name: 'Go to Sessions', action: function() { scrollToSection('sessions'); }, category: 'Navigate' },
+  { name: 'Go to Nodes & Devices', action: function() { scrollToSection('nodes-devices'); }, category: 'Navigate' },
+  { name: 'Go to Heartbeat', action: function() { scrollToSection('heartbeat'); }, category: 'Navigate' },
+  { name: 'Go to Activity Heatmap', action: function() { scrollToSection('activity'); }, category: 'Navigate' },
+];
+
+function scrollToSection(sectionKey) {
+  const section = document.querySelector('[data-section="' + sectionKey + '"]');
+  if (section) {
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (section.classList.contains('collapsed')) {
+      section.classList.remove('collapsed');
+    }
+  }
+}
+
+function toggleCommandPalette() {
+  const palette = $('command-palette');
+  if (palette.style.display === 'flex') {
+    closeCommandPalette();
+  } else {
+    openCommandPalette();
+  }
+}
+
+function openCommandPalette() {
+  const palette = $('command-palette');
+  palette.style.display = 'flex';
+  const input = $('palette-search');
+  input.value = '';
+  filterCommandPalette();
+  setTimeout(function() { input.focus(); }, 50);
+}
+
+function closeCommandPalette() {
+  $('command-palette').style.display = 'none';
+}
+
+function filterCommandPalette() {
+  const query = ($('palette-search').value || '').toLowerCase();
+  const list = $('palette-results');
+  const filtered = query
+    ? PALETTE_COMMANDS.filter(function(c) { return c.name.toLowerCase().includes(query) || c.category.toLowerCase().includes(query); })
+    : PALETTE_COMMANDS;
+
+  if (!filtered.length) {
+    list.innerHTML = '<div class="palette-empty">No matching commands</div>';
+    return;
+  }
+
+  let lastCategory = '';
+  let html = '';
+  for (const cmd of filtered) {
+    if (cmd.category !== lastCategory) {
+      lastCategory = cmd.category;
+      html += '<div class="palette-category">' + esc(cmd.category) + '</div>';
+    }
+    const idx = PALETTE_COMMANDS.indexOf(cmd);
+    html += '<div class="palette-item" data-idx="' + idx + '" onclick="executePaletteCommand(' + idx + ')">';
+    html += '<span class="palette-item-name">' + esc(cmd.name) + '</span>';
+    if (cmd.keys) html += '<span class="palette-item-keys">' + esc(cmd.keys) + '</span>';
+    html += '</div>';
+  }
+  list.innerHTML = html;
+}
+
+function executePaletteCommand(idx) {
+  closeCommandPalette();
+  const cmd = PALETTE_COMMANDS[idx];
+  if (cmd && cmd.action) cmd.action();
+}
+
+function handlePaletteKey(e) {
+  if (e.key === 'Escape') {
+    closeCommandPalette();
+    e.stopPropagation();
+  } else if (e.key === 'Enter') {
+    const first = document.querySelector('.palette-item');
+    if (first) {
+      const idx = parseInt(first.getAttribute('data-idx'), 10);
+      executePaletteCommand(idx);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // BOOT
 // ═══════════════════════════════════════════════════════════════════
 
@@ -1546,6 +1889,9 @@ try {
     render(data);
   }
 } catch {}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', handleKeyboardShortcuts);
 
 probeConnection();
 refresh();

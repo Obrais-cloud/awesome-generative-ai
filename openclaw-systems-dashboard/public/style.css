@@ -2432,3 +2432,310 @@ a:focus-visible,
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
+
+/* ── Activity Heatmap ──────────────────────────────────────────── */
+.heatmap-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: flex-start;
+  padding: 16px 20px;
+  background: var(--bg-surface-alt);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+.heatmap-day-labels {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-right: 6px;
+  flex-shrink: 0;
+}
+
+.heatmap-day-labels span {
+  height: 12px;
+  line-height: 12px;
+  font-size: 9px;
+  color: var(--text-faint);
+  text-align: right;
+}
+
+.heatmap-columns {
+  display: flex;
+  gap: 2px;
+}
+
+.heatmap-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.heatmap-cell {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  transition: opacity 0.15s;
+}
+.heatmap-cell.level-0 { background: var(--bg-surface); border: 1px solid var(--border-subtle); }
+.heatmap-cell.level-1 { background: rgba(99, 102, 241, 0.2); }
+.heatmap-cell.level-2 { background: rgba(99, 102, 241, 0.4); }
+.heatmap-cell.level-3 { background: rgba(99, 102, 241, 0.6); }
+.heatmap-cell.level-4 { background: rgba(99, 102, 241, 0.85); }
+.heatmap-cell.future { background: transparent; }
+.heatmap-cell:hover:not(.future) { outline: 1px solid var(--accent-light); }
+
+[data-theme="light"] .heatmap-cell.level-1 { background: rgba(99, 102, 241, 0.15); }
+[data-theme="light"] .heatmap-cell.level-2 { background: rgba(99, 102, 241, 0.3); }
+[data-theme="light"] .heatmap-cell.level-3 { background: rgba(99, 102, 241, 0.5); }
+[data-theme="light"] .heatmap-cell.level-4 { background: rgba(99, 102, 241, 0.75); }
+
+.heatmap-summary {
+  flex-basis: 100%;
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-top: 8px;
+}
+
+/* ── Cost Sparkline ────────────────────────────────────────────── */
+.cost-sparkline-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 10px 16px;
+  background: var(--bg-surface-deep);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+}
+
+.sparkline-chart {
+  flex: 1;
+  height: 40px;
+  min-width: 120px;
+}
+
+.sparkline-chart svg {
+  width: 100%;
+  height: 100%;
+}
+
+.sparkline-line {
+  stroke: var(--accent-light);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.sparkline-area {
+  fill: var(--accent-bg);
+}
+
+.sparkline-trend {
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  white-space: nowrap;
+}
+.sparkline-trend.trend-up { color: var(--danger-light); }
+.sparkline-trend.trend-down { color: var(--success-light); }
+.sparkline-trend.trend-flat { color: var(--text-muted); }
+
+.sparkline-empty {
+  font-size: 11px;
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+/* ── Command Palette ───────────────────────────────────────────── */
+.command-palette-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 120px;
+  z-index: 3000;
+  backdrop-filter: blur(4px);
+}
+
+.command-palette {
+  background: var(--bg-card-flat);
+  border: 1px solid var(--border-accent);
+  border-radius: 14px;
+  width: 520px;
+  max-width: 90%;
+  max-height: 420px;
+  box-shadow: 0 16px 60px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: palette-in 0.15s ease-out;
+}
+
+@keyframes palette-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.palette-search {
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 15px;
+  font-family: inherit;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.palette-search::placeholder {
+  color: var(--text-ghost);
+}
+
+.palette-results {
+  overflow-y: auto;
+  max-height: 340px;
+  padding: 8px;
+}
+
+.palette-category {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 12px 4px;
+}
+
+.palette-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.palette-item:hover {
+  background: var(--accent-bg);
+}
+
+.palette-item-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.palette-item-keys {
+  font-size: 11px;
+  color: var(--text-ghost);
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  padding: 2px 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+}
+
+.palette-empty {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-faint);
+  font-size: 13px;
+}
+
+/* ── Keyboard Shortcuts Panel ──────────────────────────────────── */
+.shortcuts-panel {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  backdrop-filter: blur(4px);
+}
+
+.shortcuts-dialog {
+  background: var(--bg-card-flat);
+  border: 1px solid var(--border-accent);
+  border-radius: 16px;
+  padding: 28px 32px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+  animation: palette-in 0.15s ease-out;
+}
+
+.shortcuts-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+}
+
+.shortcuts-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shortcut-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.shortcut-row kbd {
+  display: inline-block;
+  min-width: 24px;
+  padding: 3px 8px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  color: var(--text-muted);
+}
+
+.shortcut-row span {
+  flex: 1;
+}
+
+/* ── Footer shortcut hint ──────────────────────────────────────── */
+.footer-shortcut-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 12px;
+  font-size: 10px;
+  color: var(--text-ghost);
+  cursor: default;
+}
+
+.footer-shortcut-hint kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 3px;
+  color: var(--text-faint);
+}
+
+/* ── Responsive: Command Palette ───────────────────────────────── */
+@media (max-width: 480px) {
+  .command-palette-overlay { padding-top: 60px; }
+  .command-palette { width: 95%; }
+  .palette-search { font-size: 14px; padding: 14px 16px; }
+}
