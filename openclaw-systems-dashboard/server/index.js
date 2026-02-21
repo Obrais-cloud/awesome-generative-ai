@@ -11,6 +11,9 @@ const {
   listActions,
   fetchDeepStatus,
   fetchSkills,
+  fetchModelManagement,
+  runSecurityAudit,
+  fetchSandboxStatus,
 } = require('./collector');
 
 const PORT = parseInt(process.env.DASHBOARD_PORT, 10) || 8789;
@@ -110,6 +113,36 @@ app.get('/api/skills', async (_req, res) => {
     res.json(result);
   } catch (err) {
     res.status(500).json({ success: false, error: err.message, skills: [] });
+  }
+});
+
+// ── Model management ─────────────────────────────────────────────────────
+app.get('/api/models', async (_req, res) => {
+  try {
+    const result = await fetchModelManagement();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── Security audit ───────────────────────────────────────────────────────
+app.post('/api/security/audit', async (_req, res) => {
+  try {
+    const result = await runSecurityAudit();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── Sandbox status ───────────────────────────────────────────────────────
+app.get('/api/sandbox', async (_req, res) => {
+  try {
+    const result = await fetchSandboxStatus();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 

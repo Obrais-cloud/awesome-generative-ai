@@ -71,6 +71,9 @@ function render(d) {
   renderChannels(d.channels || []);
   renderSkills(d.skills || []);
   renderPairings(d.pendingPairings || []);
+  renderModelManagement(d.modelManagement || {});
+  renderSecuritySummary(d.securityAudit);
+  renderSandbox(d.sandbox);
   renderFeatures(d.features || []);
 
   // Keep channel data for control panel
@@ -291,6 +294,216 @@ function renderPairings(pairings) {
         <button class="btn btn-action" onclick="runAction('pairingApprove','${id}')">✓ Approve</button>
       </div>`;
   }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MODEL MANAGEMENT
+// ═══════════════════════════════════════════════════════════════════
+
+function renderModelManagement(mgmt) {
+  const grid = $('model-mgmt-grid');
+  const fallbackSection = $('model-fallbacks');
+  const fallbackList = $('fallback-list');
+
+  const models = mgmt.models || [];
+  const fallbacks = mgmt.fallbacks || [];
+  const probes = mgmt.probeResults || [];
+
+  if (!models.length) {
+    grid.innerHTML = '<div class="empty-state">No detailed model data — click Refresh Models</div>';
+    fallbackSection.style.display = 'none';
+    return;
+  }
+
+  // Build probe lookup
+  const probeMap = new Map();
+  for (const p of probes) probeMap.set(p.model.toLowerCase(), p);
+
+  grid.innerHTML = models.map((m) => {
+    const probe = probeMap.get((m.id || '').toLowerCase());
+    const probeHTML = probe
+      ? `<span class="model-probe-status ${probe.reachable ? 'reachable' : 'unreachable'}">${probe.reachable ? '●' : '○'} ${probe.reachable ? (probe.latencyMs ? probe.latencyMs + 'ms' : 'OK') : 'Down'}</span>`
+      : '';
+    const metaParts = [];
+    if (m.provider) metaParts.push(esc(m.provider));
+    if (m.auth) metaParts.push(esc(m.auth));
+    if (m.contextWindow) metaParts.push(esc(m.contextWindow) + ' ctx');
+    const icon = modelIcon(m.id);
+
+    return `
+      <div class="model-mgmt-card${m.primary ? ' primary' : ''}">
+        <div class="model-mgmt-icon">${icon}</div>
+        <div class="model-mgmt-body">
+          <div class="model-mgmt-name">${esc(m.displayName || m.id)}${m.primary ? ' <span class="pill pill-primary-tag">PRIMARY</span>' : ''}</div>
+          <div class="model-mgmt-meta">${metaParts.join(' · ')}</div>
+        </div>
+        <div class="model-mgmt-actions">
+          ${probeHTML}
+          ${!m.primary ? `<button class="btn btn-sm btn-action" onclick="confirmAction('modelSet','Set ${esc(m.id)} as primary model?','${esc(m.id)}')" title="Set as primary">⭐</button>` : ''}
+          <button class="btn btn-sm btn-ghost" onclick="confirmAction('modelFallbackAdd','Add ${esc(m.id)} to fallback chain?','${esc(m.id)}')" title="Add to fallbacks">+FB</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  // Fallbacks
+  if (fallbacks.length) {
+    fallbackSection.style.display = '';
+    const sorted = [...fallbacks].sort((a, b) => (a.priority || 0) - (b.priority || 0));
+    const chips = sorted.map((f) =>
+      `<div class="fallback-chip">
+        <span>${esc(f.model)}</span>
+        <span class="fallback-priority">#${f.priority || '?'}</span>
+        <span class="fallback-remove" onclick="confirmAction('modelFallbackRm','Remove ${esc(f.model)} from fallback chain?','${esc(f.model)}')" title="Remove">✕</span>
+      </div>`
+    );
+    fallbackList.innerHTML = chips.join('<span class="fallback-arrow">→</span>');
+  } else {
+    fallbackSection.style.display = 'none';
+  }
+}
+
+async function fetchModelDetails() {
+  showToast('Fetching model details…', 'info');
+  try {
+    const res = await fetch('/api/models');
+    const d = await res.json();
+    if (d.success) {
+      renderModelManagement(d);
+      showToast('Model details refreshed', 'success');
+    } else {
+      showToast('Model fetch failed: ' + (d.error || 'unknown'), 'error');
+    }
+  } catch (err) {
+    showToast('Model fetch error: ' + err.message, 'error');
+  }
+}
+
+async function probeModels() {
+  showToast('Probing model endpoints…', 'info');
+  try {
+    const res = await fetch('/api/models');
+    const d = await res.json();
+    if (d.success) {
+      renderModelManagement(d);
+      const probes = d.probeResults || [];
+      const up = probes.filter((p) => p.reachable).length;
+      showToast(`Probe complete: ${up}/${probes.length} models reachable`, probes.length === up ? 'success' : 'error');
+    } else {
+      showToast('Probe failed: ' + (d.error || 'unknown'), 'error');
+    }
+  } catch (err) {
+    showToast('Probe error: ' + err.message, 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SECURITY AUDIT
+// ═══════════════════════════════════════════════════════════════════
+
+function renderSecuritySummary(audit) {
+  const summaryEl = $('security-summary');
+  const checksEl = $('security-checks');
+
+  if (!audit) {
+    summaryEl.style.display = 'none';
+    checksEl.innerHTML = '<div class="empty-state">No audit data — click Run Audit</div>';
+    return;
+  }
+
+  summaryEl.style.display = 'flex';
+  summaryEl.innerHTML = `
+    <div class="security-stat passed">
+      <div class="security-stat-value">${audit.passed || 0}</div>
+      <div class="security-stat-label">Passed</div>
+    </div>
+    <div class="security-stat warnings">
+      <div class="security-stat-value">${audit.warnings || 0}</div>
+      <div class="security-stat-label">Warnings</div>
+    </div>
+    <div class="security-stat critical">
+      <div class="security-stat-value">${audit.critical || 0}</div>
+      <div class="security-stat-label">Critical</div>
+    </div>`;
+
+  const items = audit.items || [];
+  if (!items.length) {
+    checksEl.innerHTML = '<div class="empty-state">No detailed checks available</div>';
+    return;
+  }
+
+  checksEl.innerHTML = items.map((c) => {
+    const icon = c.ok ? '✅' : (c.severity === 'critical' || c.severity === 'high' ? '🔴' : '⚠️');
+    return `
+      <div class="security-check-item">
+        <div class="security-check-icon">${icon}</div>
+        <div class="security-check-name">${esc(c.name)}</div>
+        <div class="security-check-detail">${esc(c.detail)}</div>
+        <div class="security-check-severity ${esc(c.severity)}">${esc(c.severity)}</div>
+      </div>`;
+  }).join('');
+}
+
+async function runSecurityAudit() {
+  showToast('Running security audit…', 'info');
+  try {
+    const res = await fetch('/api/security/audit', { method: 'POST' });
+    const d = await res.json();
+    if (d.success) {
+      renderSecuritySummary(d);
+      showToast(`Audit complete: ${d.passed || 0} passed, ${d.critical || 0} critical`, d.critical ? 'error' : 'success');
+    } else {
+      showToast('Audit failed: ' + (d.error || 'unknown'), 'error');
+    }
+  } catch (err) {
+    showToast('Audit error: ' + err.message, 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SANDBOX
+// ═══════════════════════════════════════════════════════════════════
+
+function renderSandbox(sandbox) {
+  const panel = $('sandbox-panel');
+  if (!sandbox) {
+    panel.innerHTML = '<div class="empty-state">Sandbox data unavailable</div>';
+    return;
+  }
+
+  const statusClass = sandbox.enabled ? 'enabled' : 'disabled';
+  const statusText = sandbox.enabled ? 'ENABLED' : 'DISABLED';
+
+  panel.innerHTML = `
+    <div class="sandbox-header">
+      <span class="sandbox-status-badge ${statusClass}">${statusText}</span>
+      <span style="font-size:12px;color:#7878a0;">Sandbox isolates CLI commands for safety</span>
+    </div>
+    <div class="sandbox-props">
+      <div class="sandbox-prop">
+        <div class="sandbox-prop-label">Mode</div>
+        <div class="sandbox-prop-value">${esc(sandbox.mode || '—')}</div>
+      </div>
+      <div class="sandbox-prop">
+        <div class="sandbox-prop-label">Scope</div>
+        <div class="sandbox-prop-value">${esc(sandbox.scope || '—')}</div>
+      </div>
+      <div class="sandbox-prop">
+        <div class="sandbox-prop-label">Docker</div>
+        <div class="sandbox-prop-value">${sandbox.dockerEnabled ? '✓ Enabled' : '✕ Off'}</div>
+      </div>
+      <div class="sandbox-prop">
+        <div class="sandbox-prop-label">Docker Image</div>
+        <div class="sandbox-prop-value">${esc(sandbox.dockerImage || '—')}</div>
+      </div>
+      <div class="sandbox-prop">
+        <div class="sandbox-prop-label">Network</div>
+        <div class="sandbox-prop-value">${sandbox.networkAccess ? '✓ Allowed' : '✕ Blocked'}</div>
+      </div>
+      <div class="sandbox-prop">
+        <div class="sandbox-prop-label">File System</div>
+        <div class="sandbox-prop-value">${esc(sandbox.fileSystemAccess || '—')}</div>
+      </div>
+    </div>`;
 }
 
 // ═══════════════════════════════════════════════════════════════════

@@ -107,6 +107,45 @@
       </div>
     </div>
 
+    <!-- Model Management -->
+    <div class="section">
+      <div class="section-title">⚙ Model Management</div>
+      <div class="model-mgmt-controls">
+        <button class="btn btn-action" onclick="fetchModelDetails()">🔄 Refresh Models</button>
+        <button class="btn btn-action" onclick="probeModels()">📡 Probe All Models</button>
+      </div>
+      <div class="model-mgmt-grid" id="model-mgmt-grid">
+        <!-- Populated by JS -->
+      </div>
+      <div class="model-fallbacks" id="model-fallbacks" style="display:none;">
+        <div class="subsection-title">Fallback Chain</div>
+        <div class="fallback-list" id="fallback-list"></div>
+      </div>
+    </div>
+
+    <!-- Security Audit -->
+    <div class="section">
+      <div class="section-title">🛡 Security Audit</div>
+      <div class="security-controls">
+        <button class="btn btn-action" onclick="runSecurityAudit()">🔍 Run Audit</button>
+        <button class="btn btn-action btn-warn" onclick="confirmAction('securityAuditFix', 'Run deep security audit with auto-fix? This will attempt to resolve detected issues.')">🔧 Deep Audit + Fix</button>
+      </div>
+      <div class="security-summary" id="security-summary" style="display:none;">
+        <!-- Populated by JS -->
+      </div>
+      <div class="security-checks" id="security-checks">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Sandbox Configuration -->
+    <div class="section">
+      <div class="section-title">📦 Sandbox</div>
+      <div class="sandbox-panel" id="sandbox-panel">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
     <!-- Key Features -->
     <div class="section">
       <div class="section-title">⚡ Key Features</div>
@@ -161,6 +200,13 @@
           <div class="control-group-label">Skills</div>
           <div class="control-buttons">
             <button class="btn btn-action" onclick="confirmAction('skillUpdate', 'Update all installed skills from ClawHub?')">⬆ Update All</button>
+          </div>
+        </div>
+        <div class="control-group">
+          <div class="control-group-label">Sandbox</div>
+          <div class="control-buttons">
+            <button class="btn btn-action" onclick="confirmAction('sandboxEnable', 'Enable sandbox mode?')">🔒 Enable</button>
+            <button class="btn btn-action btn-warn" onclick="confirmAction('sandboxDisable', 'Disable sandbox mode? Commands will run without isolation.')">🔓 Disable</button>
           </div>
         </div>
       </div>

@@ -31,6 +31,14 @@ const ALLOWED_COMMANDS = {
   statusDeep:   { args: ['status', '--deep', '--json'] },
   browserStat:  { args: ['browser', 'status'] },
   pairingPend:  { args: ['pairing', 'pending', '--json'] },
+  // Model management
+  modelsList:   { args: ['models', 'list', '--all', '--json'] },
+  modelsStatus: { args: ['models', 'status', '--probe', '--json'] },
+  modelsFallbacks: { args: ['models', 'fallbacks', 'list', '--json'] },
+  // Security
+  securityAudit: { args: ['security', 'audit', '--json'] },
+  // Sandbox
+  sandboxStatus: { args: ['sandbox', 'status', '--json'] },
 };
 
 // ---------------------------------------------------------------------------
@@ -53,6 +61,16 @@ const ALLOWED_ACTIONS = {
   skillInstall:     { args: ['skills', 'install'],  description: 'Install a skill from ClawHub', acceptsId: true },
   skillUninstall:   { args: ['skills', 'uninstall'], description: 'Uninstall a skill',     acceptsId: true },
   skillUpdate:      { args: ['skills', 'update', '--all'], description: 'Update all installed skills' },
+  // Model management actions
+  modelSet:         { args: ['models', 'set'],               description: 'Set the primary AI model', acceptsId: true },
+  modelFallbackAdd: { args: ['models', 'fallbacks', 'add'],  description: 'Add a fallback model',     acceptsId: true },
+  modelFallbackRm:  { args: ['models', 'fallbacks', 'remove'], description: 'Remove a fallback model', acceptsId: true },
+  modelAliasAdd:    { args: ['models', 'aliases', 'add'],    description: 'Add a model alias',        acceptsId: true },
+  // Security actions
+  securityAuditFix: { args: ['security', 'audit', '--deep', '--fix'], description: 'Run deep security audit with auto-fix' },
+  // Sandbox actions
+  sandboxEnable:    { args: ['sandbox', 'enable'],           description: 'Enable sandbox mode' },
+  sandboxDisable:   { args: ['sandbox', 'disable'],          description: 'Disable sandbox mode' },
 };
 
 // Resolve openclaw binary — honour env override
@@ -355,6 +373,111 @@ function buildPairings(pairingData) {
 }
 
 // ---------------------------------------------------------------------------
+// Model management builder (detailed model info with fallbacks & probing)
+// ---------------------------------------------------------------------------
+function buildModelManagement(modelsData, fallbacksData, probeData) {
+  const models = [];
+  if (modelsData && !modelsData._error) {
+    const list = Array.isArray(modelsData) ? modelsData : (modelsData.models || []);
+    for (const m of list) {
+      models.push({
+        id: m.id || m.model || m.name || '',
+        displayName: m.displayName || m.display_name || m.model || m.name || '',
+        provider: m.provider || m.vendor || '',
+        primary: !!m.primary,
+        enabled: m.enabled !== false,
+        auth: m.auth || m.auth_type || '',
+        contextWindow: m.contextWindow || m.context_window || null,
+        maxTokens: m.maxTokens || m.max_tokens || null,
+      });
+    }
+  }
+
+  const fallbacks = [];
+  if (fallbacksData && !fallbacksData._error) {
+    const list = Array.isArray(fallbacksData) ? fallbacksData : (fallbacksData.fallbacks || []);
+    for (const f of list) {
+      fallbacks.push({
+        model: f.model || f.name || f.id || '',
+        priority: f.priority || f.order || 0,
+      });
+    }
+  }
+
+  // Probe results (model health/latency)
+  const probeResults = [];
+  if (probeData && !probeData._error) {
+    const list = Array.isArray(probeData) ? probeData : (probeData.results || probeData.models || []);
+    for (const p of list) {
+      probeResults.push({
+        model: p.model || p.name || p.id || '',
+        reachable: p.reachable !== false && p.ok !== false && p.status !== 'down',
+        latencyMs: p.latencyMs || p.latency_ms || p.latency || null,
+        error: p.error || null,
+      });
+    }
+  }
+
+  return { models, fallbacks, probeResults };
+}
+
+// ---------------------------------------------------------------------------
+// Security audit builder
+// ---------------------------------------------------------------------------
+function buildSecurityAudit(auditData) {
+  if (!auditData || auditData._error) return null;
+
+  const checks = Array.isArray(auditData) ? auditData : (auditData.checks || auditData.results || auditData.findings || []);
+  const summary = auditData.summary || {};
+
+  let passed = 0;
+  let warnings = 0;
+  let critical = 0;
+  const items = [];
+
+  for (const c of checks) {
+    const severity = (c.severity || c.level || 'info').toLowerCase();
+    const ok = c.ok !== false && c.pass !== false && c.status !== 'fail' && severity !== 'critical';
+    if (ok) passed++;
+    else if (severity === 'critical' || severity === 'high') critical++;
+    else warnings++;
+    items.push({
+      name: c.name || c.check || c.title || 'Check',
+      ok,
+      severity,
+      detail: c.message || c.detail || c.description || '',
+      fixable: !!c.fixable,
+    });
+  }
+
+  return {
+    passed: summary.passed || passed,
+    warnings: summary.warnings || warnings,
+    critical: summary.critical || critical,
+    total: items.length,
+    items,
+    lastRun: auditData.timestamp || auditData.runAt || new Date().toISOString(),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Sandbox status builder
+// ---------------------------------------------------------------------------
+function buildSandboxStatus(sandboxData) {
+  if (!sandboxData || sandboxData._error) return null;
+
+  return {
+    enabled: !!sandboxData.enabled,
+    mode: sandboxData.mode || sandboxData.sandbox_mode || 'unknown',
+    scope: sandboxData.scope || 'unknown',
+    dockerEnabled: sandboxData.docker !== false && sandboxData.dockerEnabled !== false,
+    dockerImage: sandboxData.dockerImage || sandboxData.docker_image || null,
+    networkAccess: sandboxData.networkAccess !== false,
+    fileSystemAccess: sandboxData.fileSystemAccess || sandboxData.fs_access || 'restricted',
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Main collector — runs all CLI calls concurrently, builds summary
 // ---------------------------------------------------------------------------
 async function collectAll() {
@@ -369,6 +492,11 @@ async function collectAll() {
     gatewayData,
     skillsData,
     pairingData,
+    modelsData,
+    fallbacksData,
+    probeData,
+    securityData,
+    sandboxData,
   ] = await Promise.all([
     runCommand('status'),
     runCommand('cronList'),
@@ -380,6 +508,11 @@ async function collectAll() {
     runCommand('gatewayStat'),
     runCommand('skillsList'),
     runCommand('pairingPend'),
+    runCommand('modelsList'),
+    runCommand('modelsFallbacks'),
+    runCommand('modelsStatus'),
+    runCommand('securityAudit'),
+    runCommand('sandboxStatus'),
   ]);
 
   const gateway = parseGatewayStatus(gatewayData);
@@ -389,6 +522,9 @@ async function collectAll() {
   const pipeline = buildPipeline(gateway, hooksData, channels);
   const skills = buildSkills(skillsData);
   const pendingPairings = buildPairings(pairingData);
+  const modelManagement = buildModelManagement(modelsData, fallbacksData, probeData);
+  const securityAudit = buildSecurityAudit(securityData);
+  const sandbox = buildSandboxStatus(sandboxData);
   const features = buildFeatures(gateway);
   const health = computeHealth(gateway, cronJobs, channels, pipeline);
 
@@ -432,6 +568,9 @@ async function collectAll() {
     pipeline,
     skills,
     pendingPairings,
+    modelManagement,
+    securityAudit,
+    sandbox,
     features,
     health,
   };
@@ -584,6 +723,43 @@ async function fetchSkills() {
   return { success: true, skills: buildSkills(data) };
 }
 
+// ---------------------------------------------------------------------------
+// Fetch model management details (models + fallbacks + probe)
+// ---------------------------------------------------------------------------
+async function fetchModelManagement() {
+  cache.clear();
+  const [modelsData, fallbacksData, probeData] = await Promise.all([
+    runCommand('modelsList'),
+    runCommand('modelsFallbacks'),
+    runCommand('modelsStatus'),
+  ]);
+  return { success: true, ...buildModelManagement(modelsData, fallbacksData, probeData) };
+}
+
+// ---------------------------------------------------------------------------
+// Run security audit
+// ---------------------------------------------------------------------------
+async function runSecurityAudit() {
+  cache.clear();
+  const data = await runCommand('securityAudit');
+  if (data && data._error) {
+    return { success: false, error: data.message };
+  }
+  const audit = buildSecurityAudit(data);
+  return redact({ success: true, ...audit });
+}
+
+// ---------------------------------------------------------------------------
+// Fetch sandbox status
+// ---------------------------------------------------------------------------
+async function fetchSandboxStatus() {
+  const data = await runCommand('sandboxStatus');
+  if (data && data._error) {
+    return { success: false, error: data.message };
+  }
+  return { success: true, ...buildSandboxStatus(data) };
+}
+
 module.exports = {
   collectAll,
   executeAction,
@@ -593,4 +769,7 @@ module.exports = {
   listActions,
   fetchDeepStatus,
   fetchSkills,
+  fetchModelManagement,
+  runSecurityAudit,
+  fetchSandboxStatus,
 };
