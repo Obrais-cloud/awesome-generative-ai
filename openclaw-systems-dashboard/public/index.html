@@ -48,10 +48,10 @@
         </div>
       </div>
       <div class="stat-tile">
-        <div class="stat-icon">🔄</div>
+        <div class="stat-icon">🧩</div>
         <div class="stat-info">
-          <div class="stat-value" id="stat-session">—</div>
-          <div class="stat-label">Session Life</div>
+          <div class="stat-value" id="stat-skills">—</div>
+          <div class="stat-label">Skills</div>
         </div>
       </div>
     </div>
@@ -88,11 +88,113 @@
       </div>
     </div>
 
+    <!-- Installed Skills -->
+    <div class="section">
+      <div class="section-title">🧩 Installed Skills</div>
+      <div class="skills-controls">
+        <button class="btn btn-action" onclick="confirmAction('skillUpdate', 'Update all installed skills?')">⬆ Update All Skills</button>
+      </div>
+      <div class="skills-list" id="skills-list">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Pending Pairings -->
+    <div class="section" id="pairings-section" style="display:none;">
+      <div class="section-title">🔗 Pending Pairings</div>
+      <div class="pairings-list" id="pairings-list">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
     <!-- Key Features -->
     <div class="section">
       <div class="section-title">⚡ Key Features</div>
       <div class="features-grid" id="features-grid">
         <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Connection Status -->
+    <div class="section">
+      <div class="section-title">🔌 Connection</div>
+      <div class="connection-bar" id="connection-bar">
+        <div class="connection-indicator" id="conn-indicator"></div>
+        <div class="connection-info">
+          <span class="connection-label" id="conn-label">Probing OpenClaw…</span>
+          <span class="connection-detail" id="conn-detail"></span>
+        </div>
+        <button class="btn btn-sm btn-ghost" onclick="probeConnection()">Re-probe</button>
+      </div>
+    </div>
+
+    <!-- Control Panel -->
+    <div class="section">
+      <div class="section-title">🎛 Control Panel</div>
+      <div class="control-panel">
+        <div class="control-group">
+          <div class="control-group-label">Agent</div>
+          <div class="control-buttons">
+            <button class="btn btn-action btn-warn" onclick="confirmAction('restart', 'Restart the OpenClaw agent?')">
+              ↻ Restart Agent
+            </button>
+            <button class="btn btn-action btn-danger" onclick="confirmAction('resetSession', 'Reset the current session? This clears session state.')">
+              ⟲ Reset Session
+            </button>
+          </div>
+        </div>
+        <div class="control-group">
+          <div class="control-group-label">Gateway</div>
+          <div class="control-buttons">
+            <button class="btn btn-action" onclick="runAction('gatewayStart')">▶ Start</button>
+            <button class="btn btn-action btn-warn" onclick="confirmAction('gatewayRestart', 'Restart the gateway proxy?')">↻ Restart</button>
+            <button class="btn btn-action btn-danger" onclick="confirmAction('gatewayStop', 'Stop the gateway proxy?')">■ Stop</button>
+          </div>
+        </div>
+        <div class="control-group">
+          <div class="control-group-label">Channels</div>
+          <div class="control-buttons" id="channel-actions">
+            <!-- Populated by JS with per-channel reconnect/login buttons -->
+          </div>
+        </div>
+        <div class="control-group">
+          <div class="control-group-label">Skills</div>
+          <div class="control-buttons">
+            <button class="btn btn-action" onclick="confirmAction('skillUpdate', 'Update all installed skills from ClawHub?')">⬆ Update All</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Troubleshoot -->
+    <div class="section">
+      <div class="section-title">🔍 Troubleshoot</div>
+      <div class="troubleshoot-panel">
+        <div class="troubleshoot-actions">
+          <button class="btn btn-action" onclick="runDiagnostics()">🩺 Diagnostics</button>
+          <button class="btn btn-action btn-warn" onclick="confirmAction('doctorFix', 'Run doctor --fix? This will auto-fix common issues.')">🔧 Auto-Fix</button>
+          <button class="btn btn-action" onclick="fetchDeepStatus()">📊 Deep Status</button>
+          <button class="btn btn-action" onclick="fetchLogs()">📋 Logs</button>
+          <button class="btn btn-sm btn-ghost" onclick="clearOutput()">Clear</button>
+        </div>
+        <div class="output-console" id="output-console">
+          <div class="output-placeholder">Run diagnostics or fetch logs to see output here.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action feedback toast -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Confirm modal -->
+    <div class="confirm-overlay" id="confirm-overlay" style="display:none;">
+      <div class="confirm-dialog">
+        <div class="confirm-title">Confirm Action</div>
+        <div class="confirm-message" id="confirm-message"></div>
+        <div class="confirm-buttons">
+          <button class="btn btn-sm btn-ghost" onclick="cancelConfirm()">Cancel</button>
+          <button class="btn btn-action btn-danger" id="confirm-ok-btn" onclick="executeConfirmed()">Confirm</button>
+        </div>
       </div>
     </div>
 

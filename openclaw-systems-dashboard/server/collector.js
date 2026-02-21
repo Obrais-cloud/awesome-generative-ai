@@ -7,10 +7,11 @@ const Cache = require('./cache');
 const { redact } = require('./redactor');
 
 const COMMAND_TIMEOUT = 10_000; // 10 s per CLI call
+const ACTION_TIMEOUT  = 30_000; // 30 s for mutating actions
 const cache = new Cache(5000);  // 5 s TTL
 
 // ---------------------------------------------------------------------------
-// Strict allowlist of CLI commands we will ever run
+// Strict allowlist of CLI commands we will ever run (read-only)
 // ---------------------------------------------------------------------------
 const ALLOWED_COMMANDS = {
   status:       { args: ['status', '--json'] },
@@ -21,6 +22,37 @@ const ALLOWED_COMMANDS = {
   agentsList:   { args: ['agents', 'list', '--json'] },
   hooksList:    { args: ['hooks', 'list', '--json'] },
   gatewayStat:  { args: ['gateway', 'status'] },
+  doctor:       { args: ['doctor', '--json'] },
+  version:      { args: ['--version'] },
+  configShow:   { args: ['config', 'show', '--json'] },
+  logs:         { args: ['logs', '--tail', '80'] },
+  skillsList:   { args: ['skills', 'list', '--json'] },
+  statusAll:    { args: ['status', '--all', '--json'] },
+  statusDeep:   { args: ['status', '--deep', '--json'] },
+  browserStat:  { args: ['browser', 'status'] },
+  pairingPend:  { args: ['pairing', 'pending', '--json'] },
+};
+
+// ---------------------------------------------------------------------------
+// Strict allowlist of mutating actions (POST only)
+// ---------------------------------------------------------------------------
+const ALLOWED_ACTIONS = {
+  restart:          { args: ['restart'],           description: 'Restart the OpenClaw agent' },
+  gatewayRestart:   { args: ['gateway', 'restart'], description: 'Restart the gateway proxy' },
+  gatewayStop:      { args: ['gateway', 'stop'],    description: 'Stop the gateway proxy' },
+  gatewayStart:     { args: ['gateway', 'start'],   description: 'Start the gateway proxy' },
+  cronEnable:       { args: ['cron', 'enable'],     description: 'Enable a cron job',       acceptsId: true },
+  cronDisable:      { args: ['cron', 'disable'],    description: 'Disable a cron job',      acceptsId: true },
+  cronRunNow:       { args: ['cron', 'run'],        description: 'Trigger a cron job now',   acceptsId: true },
+  channelReconnect: { args: ['channels', 'reconnect'], description: 'Reconnect a channel', acceptsId: true },
+  resetSession:     { args: ['session', 'reset'],   description: 'Reset the current session' },
+  doctor:           { args: ['doctor', '--json'],   description: 'Run diagnostic checks' },
+  doctorFix:        { args: ['doctor', '--fix'],    description: 'Auto-fix common issues' },
+  channelLogin:     { args: ['channels', 'login'],  description: 'Re-login to channels',   acceptsId: true },
+  pairingApprove:   { args: ['pairing', 'approve'], description: 'Approve a pending pairing', acceptsId: true },
+  skillInstall:     { args: ['skills', 'install'],  description: 'Install a skill from ClawHub', acceptsId: true },
+  skillUninstall:   { args: ['skills', 'uninstall'], description: 'Uninstall a skill',     acceptsId: true },
+  skillUpdate:      { args: ['skills', 'update', '--all'], description: 'Update all installed skills' },
 };
 
 // Resolve openclaw binary — honour env override
@@ -293,6 +325,36 @@ function buildFeatures(gateway) {
 }
 
 // ---------------------------------------------------------------------------
+// Skills builder
+// ---------------------------------------------------------------------------
+function buildSkills(skillsData) {
+  if (!skillsData || skillsData._error) return [];
+  const skills = Array.isArray(skillsData) ? skillsData : (skillsData.skills || []);
+  return skills.map((s) => ({
+    name: s.name || s.slug || 'Unknown',
+    slug: s.slug || s.name || '',
+    description: s.description || '',
+    enabled: s.enabled !== false,
+    version: s.version || null,
+    source: s.source || s.origin || null,
+  }));
+}
+
+// ---------------------------------------------------------------------------
+// Pending pairings builder
+// ---------------------------------------------------------------------------
+function buildPairings(pairingData) {
+  if (!pairingData || pairingData._error) return [];
+  const pairings = Array.isArray(pairingData) ? pairingData : (pairingData.pairings || pairingData.pending || []);
+  return pairings.map((p) => ({
+    id: p.id || p.chatId || p.chat_id || '',
+    channel: p.channel || p.type || 'Unknown',
+    name: p.name || p.displayName || p.from || '',
+    requestedAt: p.requestedAt || p.created_at || null,
+  }));
+}
+
+// ---------------------------------------------------------------------------
 // Main collector — runs all CLI calls concurrently, builds summary
 // ---------------------------------------------------------------------------
 async function collectAll() {
@@ -305,6 +367,8 @@ async function collectAll() {
     agentsData,
     hooksData,
     gatewayData,
+    skillsData,
+    pairingData,
   ] = await Promise.all([
     runCommand('status'),
     runCommand('cronList'),
@@ -314,6 +378,8 @@ async function collectAll() {
     runCommand('agentsList'),
     runCommand('hooksList'),
     runCommand('gatewayStat'),
+    runCommand('skillsList'),
+    runCommand('pairingPend'),
   ]);
 
   const gateway = parseGatewayStatus(gatewayData);
@@ -321,6 +387,8 @@ async function collectAll() {
   const cronJobs = buildCronJobs(cronListData, cronRunsData);
   const channels = buildChannels(channelsListData, channelsStatData);
   const pipeline = buildPipeline(gateway, hooksData, channels);
+  const skills = buildSkills(skillsData);
+  const pendingPairings = buildPairings(pairingData);
   const features = buildFeatures(gateway);
   const health = computeHealth(gateway, cronJobs, channels, pipeline);
 
@@ -350,6 +418,9 @@ async function collectAll() {
     agentName = statusData.agentName || statusData.agent_name;
   }
 
+  // Skills count for stats
+  stats.skillsCount = skills.length || '—';
+
   const summary = {
     generatedAt: new Date().toISOString(),
     agentName,
@@ -359,6 +430,8 @@ async function collectAll() {
     cronJobs,
     channels,
     pipeline,
+    skills,
+    pendingPairings,
     features,
     health,
   };
@@ -367,4 +440,157 @@ async function collectAll() {
   return redact(summary);
 }
 
-module.exports = { collectAll };
+// ---------------------------------------------------------------------------
+// Execute a mutating action from the allowlist
+// ---------------------------------------------------------------------------
+async function executeAction(actionKey, targetId) {
+  const spec = ALLOWED_ACTIONS[actionKey];
+  if (!spec) {
+    return { success: false, error: `Unknown action: ${actionKey}` };
+  }
+
+  const args = [...spec.args];
+  if (spec.acceptsId) {
+    if (!targetId || typeof targetId !== 'string' || !/^[\w\-.:]+$/.test(targetId)) {
+      return { success: false, error: 'Invalid or missing target ID' };
+    }
+    args.push(targetId);
+  }
+
+  // Invalidate cache so the next summary fetch is fresh
+  cache.clear();
+
+  return new Promise((resolve) => {
+    execFile(OPENCLAW_BIN, args, { timeout: ACTION_TIMEOUT }, (err, stdout, stderr) => {
+      if (err) {
+        console.error(`[action] ${actionKey} failed: ${err.message}`);
+        resolve({
+          success: false,
+          action: actionKey,
+          error: err.message,
+          stderr: (stderr || '').slice(0, 500),
+        });
+        return;
+      }
+      let output;
+      try {
+        output = JSON.parse(stdout);
+      } catch {
+        output = stdout.trim();
+      }
+      resolve(redact({
+        success: true,
+        action: actionKey,
+        description: spec.description,
+        output,
+      }));
+    });
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Fetch recent logs (read-only, redacted)
+// ---------------------------------------------------------------------------
+async function fetchLogs() {
+  const data = await runCommand('logs');
+  if (data && data._error) {
+    return { success: false, error: data.message, lines: [] };
+  }
+  const raw = data._raw || JSON.stringify(data);
+  // Split into lines, redact each line
+  const lines = raw.split('\n').map((line) => {
+    // Mask anything that looks like a token/key value inline
+    return line.replace(/([Tt]oken|[Kk]ey|[Ss]ecret|[Pp]assword|[Bb]earer)[=:\s]+\S+/g, '$1=[REDACTED]');
+  });
+  return { success: true, lines };
+}
+
+// ---------------------------------------------------------------------------
+// Run diagnostics (doctor)
+// ---------------------------------------------------------------------------
+async function runDiagnostics() {
+  cache.clear();
+  const data = await runCommand('doctor');
+  if (data && data._error) {
+    return { success: false, error: data.message, checks: [] };
+  }
+  return redact({ success: true, ...data });
+}
+
+// ---------------------------------------------------------------------------
+// Connection probe — quick health check to verify CLI is reachable
+// ---------------------------------------------------------------------------
+async function probeConnection() {
+  const start = Date.now();
+  const statusData = await runCommand('version');
+  const latencyMs = Date.now() - start;
+
+  if (statusData && statusData._error) {
+    return {
+      connected: false,
+      latencyMs,
+      error: statusData.message,
+      binary: OPENCLAW_BIN,
+    };
+  }
+  const version = statusData._raw || (typeof statusData === 'string' ? statusData : null);
+  return {
+    connected: true,
+    latencyMs,
+    version: version || null,
+    binary: OPENCLAW_BIN,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// List available actions (for the UI to render buttons)
+// ---------------------------------------------------------------------------
+function listActions() {
+  const actions = {};
+  for (const [key, spec] of Object.entries(ALLOWED_ACTIONS)) {
+    actions[key] = {
+      description: spec.description,
+      requiresId: !!spec.acceptsId,
+    };
+  }
+  return actions;
+}
+
+// ---------------------------------------------------------------------------
+// Deep status — openclaw status --all / --deep
+// ---------------------------------------------------------------------------
+async function fetchDeepStatus() {
+  cache.clear();
+  const data = await runCommand('statusDeep');
+  if (data && data._error) {
+    // Fallback to --all
+    const allData = await runCommand('statusAll');
+    if (allData && allData._error) {
+      return { success: false, error: allData.message };
+    }
+    return redact({ success: true, ...allData });
+  }
+  return redact({ success: true, ...data });
+}
+
+// ---------------------------------------------------------------------------
+// Fetch skills list
+// ---------------------------------------------------------------------------
+async function fetchSkills() {
+  const data = await runCommand('skillsList');
+  if (data && data._error) {
+    return { success: false, error: data.message, skills: [] };
+  }
+  return { success: true, skills: buildSkills(data) };
+}
+
+module.exports = {
+  collectAll,
+  executeAction,
+  fetchLogs,
+  runDiagnostics,
+  probeConnection,
+  listActions,
+  fetchDeepStatus,
+  fetchSkills,
+};

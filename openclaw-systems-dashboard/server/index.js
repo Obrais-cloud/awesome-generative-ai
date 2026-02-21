@@ -2,12 +2,22 @@
 
 const express = require('express');
 const path = require('path');
-const { collectAll } = require('./collector');
+const {
+  collectAll,
+  executeAction,
+  fetchLogs,
+  runDiagnostics,
+  probeConnection,
+  listActions,
+  fetchDeepStatus,
+  fetchSkills,
+} = require('./collector');
 
 const PORT = parseInt(process.env.DASHBOARD_PORT, 10) || 8789;
 const HOST = '127.0.0.1'; // Non-negotiable: local only
 
 const app = express();
+app.use(express.json());
 
 // ── Static files ──────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, '..', 'public')));
@@ -30,6 +40,76 @@ app.get('/api/summary', async (_req, res) => {
       pipeline: [],
       features: [],
     });
+  }
+});
+
+// ── Connection probe ──────────────────────────────────────────────────────
+app.get('/api/probe', async (_req, res) => {
+  try {
+    const result = await probeConnection();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ connected: false, error: err.message });
+  }
+});
+
+// ── Available actions ─────────────────────────────────────────────────────
+app.get('/api/actions', (_req, res) => {
+  res.json(listActions());
+});
+
+// ── Execute an action ─────────────────────────────────────────────────────
+app.post('/api/action', async (req, res) => {
+  const { action, targetId } = req.body || {};
+  if (!action || typeof action !== 'string') {
+    return res.status(400).json({ success: false, error: 'Missing action field' });
+  }
+  try {
+    const result = await executeAction(action, targetId || null);
+    res.json(result);
+  } catch (err) {
+    console.error('[server] /api/action error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── Logs ──────────────────────────────────────────────────────────────────
+app.get('/api/logs', async (_req, res) => {
+  try {
+    const result = await fetchLogs();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message, lines: [] });
+  }
+});
+
+// ── Diagnostics (doctor) ─────────────────────────────────────────────────
+app.post('/api/diagnose', async (_req, res) => {
+  try {
+    const result = await runDiagnostics();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message, checks: [] });
+  }
+});
+
+// ── Deep status ──────────────────────────────────────────────────────────
+app.get('/api/status/deep', async (_req, res) => {
+  try {
+    const result = await fetchDeepStatus();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── Skills list ──────────────────────────────────────────────────────────
+app.get('/api/skills', async (_req, res) => {
+  try {
+    const result = await fetchSkills();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message, skills: [] });
   }
 });
 

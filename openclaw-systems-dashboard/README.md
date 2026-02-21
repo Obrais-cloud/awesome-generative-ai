@@ -31,31 +31,60 @@ DASHBOARD_PORT=9000 OPENCLAW_BIN=/usr/local/bin/openclaw npm start
 Browser  ←→  Express (127.0.0.1:8789)  ←→  OpenClaw CLI (execFile)
 ```
 
-- **Backend** (`server/`) — Node.js + Express. Runs CLI commands from a strict allowlist, caches results for 5 s, redacts secrets, and serves a single `/api/summary` JSON endpoint.
+- **Backend** (`server/`) — Node.js + Express. Runs CLI commands from a strict allowlist, caches results for 5 s, redacts secrets, and serves JSON endpoints for monitoring and control.
 - **Frontend** (`public/`) — Static HTML/CSS/JS. Polls `/api/summary` every 15 s with exponential backoff on failure (caps at 2 min). Shows a "STALE" indicator after 3 consecutive failures.
 
 ## API
 
 ### `GET /api/summary`
 
-Returns a single JSON object with all dashboard data:
+Returns a single JSON object with all dashboard data (models, cron, channels, skills, pipeline, health, pending pairings).
 
-```json
-{
-  "generatedAt": "...",
-  "agentName": "...",
-  "gateway": { "running": true, "bind": "127.0.0.1", "port": 3000, "pid": 12345, "rpcOk": true },
-  "stats": { "modelsCount": 5, "cronCount": 6, "channelsCount": 2, "sessionLife": "24h" },
-  "models": [],
-  "cronJobs": [],
-  "channels": [],
-  "pipeline": [],
-  "features": [],
-  "health": { "state": "ok", "reasons": [] }
-}
-```
+### `GET /api/probe`
 
-See `sample-payload.json` for a full example.
+Quick connection health check — verifies the CLI binary is reachable and returns latency + version.
+
+### `POST /api/action`
+
+Execute a control action. Body: `{ "action": "<key>", "targetId": "<optional>" }`.
+
+Available actions:
+
+| Action | Description | Requires ID |
+|---|---|---|
+| `restart` | Restart the OpenClaw agent | No |
+| `gatewayStart` | Start the gateway proxy | No |
+| `gatewayRestart` | Restart the gateway proxy | No |
+| `gatewayStop` | Stop the gateway proxy | No |
+| `resetSession` | Reset the current session | No |
+| `cronEnable` | Enable a cron job | Yes |
+| `cronDisable` | Disable a cron job | Yes |
+| `cronRunNow` | Trigger a cron job immediately | Yes |
+| `channelReconnect` | Reconnect a channel | Yes |
+| `channelLogin` | Re-login to a channel | Yes |
+| `pairingApprove` | Approve a pending pairing | Yes |
+| `doctorFix` | Auto-fix common issues | No |
+| `skillInstall` | Install a skill from ClawHub | Yes |
+| `skillUninstall` | Uninstall a skill | Yes |
+| `skillUpdate` | Update all installed skills | No |
+
+### `GET /api/logs`
+
+Fetch the last 80 lines of OpenClaw logs (redacted).
+
+### `POST /api/diagnose`
+
+Run `openclaw doctor --json` diagnostics.
+
+### `GET /api/status/deep`
+
+Run `openclaw status --deep --json` for a comprehensive status report.
+
+### `GET /api/skills`
+
+Fetch the list of installed skills.
+
+See `sample-payload.json` for a full example of `/api/summary` output.
 
 ## Model Stack Override
 
