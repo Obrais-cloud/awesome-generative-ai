@@ -188,8 +188,8 @@ Contributions to this list are welcome. Before submitting your suggestions, plea
 - [Aider](https://aider.chat/) - AI pair programming in your terminal. [#opensource](https://github.com/Aider-AI/aider)
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) - An agentic coding tool that lives in the terminal, by Anthropic.
 - [Windsurf](https://windsurf.com/) - The first agentic IDE, by Codeium.
-- [bolt.new](https://bolt.new/) - Prompt, run, edit, and deploy full-stack web and mobile apps.
-- [v0](https://v0.dev/) - AI-powered frontend development and UI generation, by Vercel.
+- [bolt.new](https://bolt.new/) - Prompt, run, edit, and deploy full-stack web and mobile apps. [#opensource](https://github.com/stackblitz/bolt.new)
+- [v0](https://v0.app/) - AI-powered frontend development and UI generation, by Vercel.
 - [Lovable](https://lovable.dev/) - An AI-powered full-stack app builder.
 
 ### Developer tools
