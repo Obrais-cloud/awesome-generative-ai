@@ -184,6 +184,13 @@ Contributions to this list are welcome. Before submitting your suggestions, plea
 - [Open Interpreter](https://github.com/KillianLucas/open-interpreter) - OpenAI's Code Interpreter in your terminal, running locally.
 - [Continue](https://www.continue.dev/) - Open-source AI code assistant. Connect any model and any context to create custom autocomplete and chat experiences inside the IDE. [#opensource](https://github.com/continuedev/continue)
 - [RooCode][https://github.com/RooCodeInc/Roo-Code] - An AI-powered autonomous coding agent integrated directly into VS Code. [#opensource](https://github.com/RooCodeInc/Roo-Code)
+- [Cline](https://github.com/cline/cline) - Autonomous coding agent that works right in your IDE, with support for various LLMs. #opensource
+- [Aider](https://aider.chat/) - AI pair programming in your terminal. [#opensource](https://github.com/Aider-AI/aider)
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) - An agentic coding tool that lives in the terminal, by Anthropic.
+- [Windsurf](https://windsurf.com/) - The first agentic IDE, by Codeium.
+- [bolt.new](https://bolt.new/) - Prompt, run, edit, and deploy full-stack web and mobile apps.
+- [v0](https://v0.dev/) - AI-powered frontend development and UI generation, by Vercel.
+- [Lovable](https://lovable.dev/) - An AI-powered full-stack app builder.
 
 ### Developer tools
 
