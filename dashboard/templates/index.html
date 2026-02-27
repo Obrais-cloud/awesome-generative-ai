@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Content Machine — Dashboard</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <nav class="sidebar">
+    <div class="logo">
+      <h2>Content Machine</h2>
+      <span class="niche-badge" id="nicheBadge">loading…</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#overview" class="nav-link active" data-section="overview">Overview</a></li>
+      <li><a href="#trends" class="nav-link" data-section="trends">Trending Topics</a></li>
+      <li><a href="#content" class="nav-link" data-section="content">Generated Content</a></li>
+      <li><a href="#insights" class="nav-link" data-section="insights">Creator Insights</a></li>
+      <li><a href="#calendar" class="nav-link" data-section="calendar">Content Calendar</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <button class="btn btn-primary" id="refreshBtn">Refresh Data</button>
+      <p class="last-updated" id="lastUpdated">—</p>
+    </div>
+  </nav>
+
+  <main class="content">
+    <!-- OVERVIEW -->
+    <section id="overview" class="section active">
+      <h1>Dashboard Overview</h1>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-number" id="statPosts">0</span>
+          <span class="stat-label">Posts Generated</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" id="statTrends">0</span>
+          <span class="stat-label">Trends Tracked</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" id="statCreators">0</span>
+          <span class="stat-label">Creators Monitored</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" id="statPlatforms">4</span>
+          <span class="stat-label">Platforms</span>
+        </div>
+      </div>
+      <div class="recommendations-panel">
+        <h2>Recommendations</h2>
+        <ul id="recommendationsList"></ul>
+      </div>
+    </section>
+
+    <!-- TRENDING TOPICS -->
+    <section id="trends" class="section">
+      <h1>Trending Topics</h1>
+      <div class="trends-grid" id="trendsGrid"></div>
+    </section>
+
+    <!-- GENERATED CONTENT -->
+    <section id="content" class="section">
+      <h1>Generated Content</h1>
+      <div class="filter-bar">
+        <button class="filter-btn active" data-platform="all">All</button>
+        <button class="filter-btn" data-platform="twitter">Twitter/X</button>
+        <button class="filter-btn" data-platform="linkedin">LinkedIn</button>
+        <button class="filter-btn" data-platform="instagram">Instagram</button>
+        <button class="filter-btn" data-platform="tiktok">TikTok</button>
+      </div>
+      <div class="content-grid" id="contentGrid"></div>
+    </section>
+
+    <!-- CREATOR INSIGHTS -->
+    <section id="insights" class="section">
+      <h1>Creator Insights</h1>
+      <div class="patterns-panel" id="patternsPanel"></div>
+      <h2>Top Performing Content</h2>
+      <div class="insights-grid" id="insightsGrid"></div>
+    </section>
+
+    <!-- CONTENT CALENDAR -->
+    <section id="calendar" class="section">
+      <h1>Content Calendar</h1>
+      <div class="calendar-view" id="calendarView"></div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast">Copied to clipboard!</div>
+
+  <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+# Environment and secrets
+.env
+credentials.json
+token.json
+
+# Intermediate files - always regenerated
+.tmp/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+venv/
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Dashboard data (regenerated)
+dashboard/data/*.json
