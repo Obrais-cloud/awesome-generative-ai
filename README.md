@@ -182,6 +182,7 @@ Contributions to this list are welcome. Before submitting your suggestions, plea
 - [GPT-Code UI](https://github.com/ricklamers/gpt-code-ui) - An open source implementation of OpenAI's ChatGPT Code interpreter. #opensource
 - [MetaGPT](https://github.com/geekan/MetaGPT) - The Multi-Agent Framework: Given one line Requirement, return PRD, Design, Tasks, Repo
 - [Open Interpreter](https://github.com/KillianLucas/open-interpreter) - OpenAI's Code Interpreter in your terminal, running locally.
+- [Claude Code](https://github.com/anthropics/claude-code) - An agentic coding tool by Anthropic that lives in your terminal, understands your codebase, and helps you code faster through natural language commands. #opensource
 - [Continue](https://www.continue.dev/) - Open-source AI code assistant. Connect any model and any context to create custom autocomplete and chat experiences inside the IDE. [#opensource](https://github.com/continuedev/continue)
 - [RooCode][https://github.com/RooCodeInc/Roo-Code] - An AI-powered autonomous coding agent integrated directly into VS Code. [#opensource](https://github.com/RooCodeInc/Roo-Code)
 
@@ -206,6 +207,11 @@ Contributions to this list are welcome. Before submitting your suggestions, plea
 - [llama.cpp](https://github.com/ggml-org/llama.cpp) - Inference of Meta's LLaMA model (and others) in pure C/C++. #opensource
 - [bitnet.cpp](https://github.com/microsoft/BitNet) - Official inference framework for 1-bit LLMs, by Microsoft. [#opensource](https://github.com/microsoft/BitNet)
 - [OpenRouter](https://openrouter.ai/) - A unified interface for LLMs. [#opensource](https://github.com/OpenRouterTeam)
+- [Claude Code Action](https://github.com/anthropics/claude-code-action) - A GitHub Action for automating code review, implementation, and PR/issue workflows with Claude Code. #opensource
+- [Claude Code SDK](https://docs.anthropic.com/en/docs/claude-code/sdk) - SDK for building AI agents with Claude Code's tools and capabilities, available in Python and TypeScript. [#opensource](https://github.com/anthropics/claude-agent-sdk-python)
+- [Claude Code MCP](https://docs.anthropic.com/en/docs/claude-code/mcp) - Connect Claude Code to external tools, databases, and APIs through the Model Context Protocol (MCP).
+- [Claude Code GitHub Actions](https://docs.anthropic.com/en/docs/claude-code/github-actions) - Run Claude Code from GitHub to automate code review, issue triage, and PR workflows.
+- [Claude Code Hooks](https://docs.anthropic.com/en/docs/claude-code/hooks) - User-defined shell commands that execute at specific lifecycle points in Claude Code for deterministic workflow automation.
 - [Ludwig](https://github.com/ludwig-ai/ludwig) - A low-code framework for building custom AI models like LLMs and other deep neural networks. [#opensource](https://github.com/ludwig-ai/ludwig)
 
 ### Playgrounds
@@ -389,6 +395,7 @@ Contributions to this list are welcome. Before submitting your suggestions, plea
 - [OpenAI Prompt Engineering Guide](https://platform.openai.com/docs/guides/prompt-engineering) - Strategies and tactics for getting better results from large language models.
 - [PromptPerfect](https://promptperfect.jina.ai/) - Tool for prompt engineering.
 - [Anthropic courses](https://github.com/anthropics/courses) - Anthropic's educational courses.
+- [Claude Code Best Practices](https://www.anthropic.com/engineering/claude-code-best-practices) - A guide to proven patterns for effective agentic coding with Claude Code.
 - [Build a Large Language Model (From Scratch)](https://www.manning.com/books/build-a-large-language-model-from-scratch) - A guide to building your own working LLM, by Sebastian Raschka.
 
 ## More lists
