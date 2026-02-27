@@ -389,6 +389,7 @@ Contributions to this list are welcome. Before submitting your suggestions, plea
 - [OpenAI Prompt Engineering Guide](https://platform.openai.com/docs/guides/prompt-engineering) - Strategies and tactics for getting better results from large language models.
 - [PromptPerfect](https://promptperfect.jina.ai/) - Tool for prompt engineering.
 - [Anthropic courses](https://github.com/anthropics/courses) - Anthropic's educational courses.
+- [Claude Code Best Practice](https://github.com/shanraisshan/claude-code-best-practice) - A comprehensive collection of best practices for Claude Code, covering skills, agents, memory, hooks, MCP servers, and advanced workflows.
 - [Build a Large Language Model (From Scratch)](https://www.manning.com/books/build-a-large-language-model-from-scratch) - A guide to building your own working LLM, by Sebastian Raschka.
 
 ## More lists
