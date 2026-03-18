@@ -3,6 +3,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { Conversation, Message, GenerationConfig, ThemeMode } from '../types';
 import { DEFAULT_MODEL_ID, DEFAULT_SYSTEM_PROMPT } from '../constants/models';
 import * as db from '../db/database';
+import { generateCompletion, getContext, loadModel, releaseModel } from '../engine/inference';
+import { useModelStore } from './modelStore';
+
+let stopFn: (() => Promise<void>) | null = null;
 
 interface ChatState {
   conversations: Conversation[];
@@ -13,6 +17,8 @@ interface ChatState {
   selectedModelId: string;
   theme: ThemeMode;
   generationConfig: GenerationConfig;
+  modelLoadProgress: number;
+  isModelReady: boolean;
 
   loadConversations: () => Promise<void>;
   createNewConversation: () => Promise<string>;
@@ -25,6 +31,7 @@ interface ChatState {
   updateGenerationConfig: (config: Partial<GenerationConfig>) => void;
   searchConversations: (query: string) => Promise<Conversation[]>;
   clearAllData: () => Promise<void>;
+  initModel: () => Promise<void>;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -41,10 +48,29 @@ export const useChatStore = create<ChatState>((set, get) => ({
     topP: 0.9,
     systemPrompt: DEFAULT_SYSTEM_PROMPT,
   },
+  modelLoadProgress: 0,
+  isModelReady: false,
 
   loadConversations: async () => {
     const conversations = await db.getAllConversations();
     set({ conversations });
+  },
+
+  initModel: async () => {
+    const modelStore = useModelStore.getState();
+    const modelPath = modelStore.getModelPath(get().selectedModelId);
+    if (!modelPath) return;
+
+    set({ modelLoadProgress: 0, isModelReady: false });
+    try {
+      await loadModel(modelPath, (progress) => {
+        set({ modelLoadProgress: progress });
+      });
+      set({ isModelReady: true, modelLoadProgress: 1 });
+    } catch {
+      // Model failed to load — fall back to demo mode
+      set({ isModelReady: false, modelLoadProgress: 0 });
+    }
   },
 
   createNewConversation: async () => {
@@ -116,38 +142,108 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }));
     }
 
-    // Simulate on-device inference (replaced with real llama.rn in production)
     set({ isGenerating: true, streamingContent: '' });
 
-    const simulatedResponse = generateSimulatedResponse(content);
-    let accumulated = '';
+    // Build message history for the model
+    const allMessages = get().messages;
+    const chatMessages = [
+      { role: 'system', content: get().generationConfig.systemPrompt },
+      ...allMessages.map((m) => ({ role: m.role, content: m.content })),
+    ];
 
-    for (const char of simulatedResponse) {
-      if (!get().isGenerating) break;
-      accumulated += char;
-      set({ streamingContent: accumulated });
-      await new Promise((r) => setTimeout(r, 15));
-    }
+    const ctx = getContext();
+    if (ctx) {
+      // Real llama.rn inference
+      const finalConvId = conversationId;
+      stopFn = await generateCompletion(
+        chatMessages,
+        {
+          temperature: get().generationConfig.temperature,
+          maxTokens: get().generationConfig.maxTokens,
+          topP: get().generationConfig.topP,
+        },
+        {
+          onToken: (_token, accumulated) => {
+            set({ streamingContent: accumulated });
+          },
+          onComplete: async (result) => {
+            const responseContent = result.content || result.text;
+            const assistantMessage: Message = {
+              id: uuidv4(),
+              conversationId: finalConvId,
+              role: 'assistant',
+              content: responseContent,
+              createdAt: Date.now(),
+              tokens: result.tokens_predicted,
+            };
+            await db.addMessage(assistantMessage);
+            set((s) => ({
+              messages: [...s.messages, assistantMessage],
+              isGenerating: false,
+              streamingContent: '',
+            }));
+            stopFn = null;
+          },
+          onError: async (error) => {
+            // On error, save partial content if any
+            const partial = get().streamingContent;
+            if (partial) {
+              const assistantMessage: Message = {
+                id: uuidv4(),
+                conversationId: finalConvId,
+                role: 'assistant',
+                content: partial + '\n\n[Generation stopped: ' + error.message + ']',
+                createdAt: Date.now(),
+              };
+              await db.addMessage(assistantMessage);
+              set((s) => ({
+                messages: [...s.messages, assistantMessage],
+                isGenerating: false,
+                streamingContent: '',
+              }));
+            } else {
+              set({ isGenerating: false, streamingContent: '' });
+            }
+            stopFn = null;
+          },
+        }
+      );
+    } else {
+      // Demo mode fallback when no model is loaded
+      const simulatedResponse = generateSimulatedResponse(content);
+      let accumulated = '';
 
-    if (get().isGenerating) {
-      const assistantMessage: Message = {
-        id: uuidv4(),
-        conversationId,
-        role: 'assistant',
-        content: accumulated,
-        createdAt: Date.now(),
-        tokens: accumulated.split(/\s+/).length,
-      };
-      await db.addMessage(assistantMessage);
-      set((s) => ({
-        messages: [...s.messages, assistantMessage],
-        isGenerating: false,
-        streamingContent: '',
-      }));
+      for (const char of simulatedResponse) {
+        if (!get().isGenerating) break;
+        accumulated += char;
+        set({ streamingContent: accumulated });
+        await new Promise((r) => setTimeout(r, 15));
+      }
+
+      if (get().isGenerating) {
+        const assistantMessage: Message = {
+          id: uuidv4(),
+          conversationId,
+          role: 'assistant',
+          content: accumulated,
+          createdAt: Date.now(),
+          tokens: accumulated.split(/\s+/).length,
+        };
+        await db.addMessage(assistantMessage);
+        set((s) => ({
+          messages: [...s.messages, assistantMessage],
+          isGenerating: false,
+          streamingContent: '',
+        }));
+      }
     }
   },
 
-  stopGeneration: () => {
+  stopGeneration: async () => {
+    if (stopFn) {
+      await stopFn();
+      stopFn = null;
+    }
     set({ isGenerating: false });
   },
 

@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { View, FlatList, TextInput, Text, Alert, StyleSheet } from 'react-native';
+import { View, FlatList, TextInput, Text, Alert, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { useChatStore } from '../../src/stores/chatStore';
 import { ConversationItem } from '../../src/components/ConversationItem';
+import { exportConversation, exportConversationAsMarkdown } from '../../src/utils/export';
 import { colors, spacing, radius } from '../../src/constants/theme';
 import { Conversation } from '../../src/types';
+import * as db from '../../src/db/database';
 
 export default function HistoryScreen() {
   const {
@@ -51,6 +54,25 @@ export default function HistoryScreen() {
     ]);
   };
 
+  const handleExport = async (conversation: Conversation) => {
+    const messages = await db.getMessages(conversation.id);
+    if (messages.length === 0) {
+      Alert.alert('Empty Conversation', 'This conversation has no messages to export.');
+      return;
+    }
+    Alert.alert('Export', `Export "${conversation.title}"?`, [
+      {
+        text: 'Text (.txt)',
+        onPress: () => exportConversation(conversation, messages),
+      },
+      {
+        text: 'Markdown (.md)',
+        onPress: () => exportConversationAsMarkdown(conversation, messages),
+      },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: t.background }]} edges={['bottom']}>
       <TextInput
@@ -70,14 +92,18 @@ export default function HistoryScreen() {
 
       <FlatList
         data={displayedConversations}
-        renderItem={({ item }) => (
-          <ConversationItem
-            conversation={item}
-            isActive={item.id === currentConversationId}
-            isDark={isDark}
-            onPress={() => handleSelect(item.id)}
-            onDelete={() => handleDelete(item.id, item.title)}
-          />
+        renderItem={({ item, index }) => (
+          <Animated.View entering={FadeInDown.delay(index * 50).duration(300)}>
+            <Pressable onLongPress={() => handleExport(item)}>
+              <ConversationItem
+                conversation={item}
+                isActive={item.id === currentConversationId}
+                isDark={isDark}
+                onPress={() => handleSelect(item.id)}
+                onDelete={() => handleDelete(item.id, item.title)}
+              />
+            </Pressable>
+          </Animated.View>
         )}
         keyExtractor={(item) => item.id}
         contentContainerStyle={displayedConversations.length === 0 ? styles.emptyList : undefined}
@@ -87,11 +113,19 @@ export default function HistoryScreen() {
               {searchQuery ? 'No conversations found' : 'No conversations yet'}
             </Text>
             <Text style={[styles.emptyHint, { color: t.textSecondary }]}>
-              Start chatting in the Chat tab
+              {searchQuery ? 'Try a different search term' : 'Start chatting in the Chat tab'}
             </Text>
           </View>
         }
       />
+
+      {conversations.length > 0 && (
+        <View style={[styles.footer, { borderTopColor: t.border }]}>
+          <Text style={[styles.footerText, { color: t.textSecondary }]}>
+            {conversations.length} conversation{conversations.length !== 1 ? 's' : ''} · Long press to export
+          </Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -123,5 +157,13 @@ const styles = StyleSheet.create({
   },
   emptyHint: {
     fontSize: 14,
+  },
+  footer: {
+    borderTopWidth: 1,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 12,
   },
 });
